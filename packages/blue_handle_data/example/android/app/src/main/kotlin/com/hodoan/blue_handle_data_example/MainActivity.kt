@@ -1,6 +1,0 @@
-package com.hodoan.blue_handle_data_example
-
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity: FlutterActivity() {
-}
