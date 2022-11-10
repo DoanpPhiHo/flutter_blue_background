@@ -20,12 +20,13 @@ class GenBgmMeter {
 
   /// 0x2b: Read storage number of data
   List<int> generateStorageNumberOfDataCmd() => _generateCmd(cmd: 43);
-  List<int> _generateCmd(
-      {required int cmd,
-      int data0 = 0,
-      int data1 = 0,
-      int data2 = 0,
-      int data3 = 0}) {
+  List<int> _generateCmd({
+    required int cmd,
+    int data0 = 0,
+    int data1 = 0,
+    int data2 = 0,
+    int data3 = 0,
+  }) {
     final List<int> array =
         MeterCmdUtil.instance.appendOneByteCheckSumToCmd(Uint8List.fromList([
       81,
