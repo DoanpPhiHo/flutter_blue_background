@@ -1,4 +1,5 @@
 import 'flutter_blue_background_platform_interface.dart';
+export 'models/uuid.dart';
 
 class FlutterBlueBackground {
   Future<String?> getPlatformVersion() {

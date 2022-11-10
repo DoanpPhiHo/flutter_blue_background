@@ -69,6 +69,7 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
 
         val bluetoothManager: BluetoothManager? =
             context?.applicationContext?.getSystemService(BluetoothManager::class.java)
@@ -84,7 +85,6 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
     private fun getPlatformVersion(result: Result) {
         result.success("Android ${Build.VERSION.RELEASE}")
     }
-
 
     override fun onDetachedFromEngine(binding: FlutterPluginBinding) {
         channel.setMethodCallHandler(null)

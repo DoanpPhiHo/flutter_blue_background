@@ -1,9 +1,10 @@
 import 'package:flutter/services.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_blue_background/flutter_blue_background_method_channel.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  MethodChannelFlutterBlueBackground platform = MethodChannelFlutterBlueBackground();
+  final MethodChannelFlutterBlueBackground platform =
+      MethodChannelFlutterBlueBackground();
   const MethodChannel channel = MethodChannel('flutter_blue_background');
 
   TestWidgetsFlutterBinding.ensureInitialized();

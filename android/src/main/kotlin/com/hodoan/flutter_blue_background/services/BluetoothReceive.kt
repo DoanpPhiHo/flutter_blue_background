@@ -36,6 +36,8 @@ class BluetoothReceive(
     )
     private var sink: EventSink? = null
 
+    private var isNotScanCancel = true
+
     init {
         eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventSink?) {
@@ -54,7 +56,11 @@ class BluetoothReceive(
         Log.d(tag, "onReceive: ")
         val action: String? = intent?.action
 
-        if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+        if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED) {
+            if(isNotScanCancel)
+                    adapter?.startDiscovery()
+                }
+        else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
             when (intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                 BluetoothAdapter.STATE_OFF -> {
                     Log.d(tag, "onReceive: STATE_OFF ")
@@ -84,6 +90,8 @@ class BluetoothReceive(
                 }
                 BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                     Log.d(tag, "onReceive: ACTION_ACL_DISCONNECTED ")
+                    isNotScanCancel = true
+                    adapter?.startDiscovery()
                 }
                 BluetoothDevice.ACTION_FOUND -> {
                     Log.d(tag, "onReceive: ACTION_FOUND ")
@@ -95,6 +103,7 @@ class BluetoothReceive(
                             if (it.address == "C0:26:DA:18:FE:D0") {
                                 if (context != null) {
                                     adapter?.cancelDiscovery()
+                                    isNotScanCancel = false
                                     gatt = it.connectGatt(context, true, mGattCallback)
                                 }
                             }

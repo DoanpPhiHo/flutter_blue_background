@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_background/flutter_blue_background.dart';
+import 'package:flutter_blue_background/models/meter/gen_bgm_meter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +32,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initPlatformState() async {
     _flutterBlueBackgroundPlugin.startBackgroundBluetooth();
     _flutterBlueBackgroundPlugin.subscriptionData().listen((event) {
-      setState(() => text = event is List ? event[0] : event);
+      setState(() => text = event is List ? event[0].toString() : event);
     });
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
@@ -67,11 +68,13 @@ class _MyAppState extends State<MyApp> {
             Center(child: Text('Running on: $_platformVersion\n')),
             Center(child: Text('data: $text\n')),
             ElevatedButton(
-                onPressed: () {
-                  _flutterBlueBackgroundPlugin
-                      .writeCharacteristic([81, 35, 0, 0, 0, 0, 163, 23]);
-                },
-                child: const Text('WriteData'))
+              onPressed: () {
+                _flutterBlueBackgroundPlugin.writeCharacteristic(
+                  GenBgmMeter.instance.generateDeviceClockTimeCmd(),
+                );
+              },
+              child: const Text('WriteData'),
+            )
           ],
         ),
       ),

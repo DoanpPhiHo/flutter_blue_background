@@ -1,5 +1,6 @@
 import UIKit
 import Flutter
+import flutter_blue_background
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
