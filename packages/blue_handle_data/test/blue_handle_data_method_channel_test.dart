@@ -1,9 +1,9 @@
+import 'package:blue_handle_data/blue_handle_data_method_channel.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:blue_handle_data/blue_handle_data_method_channel.dart';
 
 void main() {
-  MethodChannelBlueHandleData platform = MethodChannelBlueHandleData();
+  final MethodChannelBlueHandleData platform = MethodChannelBlueHandleData();
   const MethodChannel channel = MethodChannel('blue_handle_data');
 
   TestWidgetsFlutterBinding.ensureInitialized();

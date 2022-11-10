@@ -2,6 +2,7 @@ name: flutter_blue_background
 description: A new Flutter plugin project.
 version: 0.0.1
 homepage:
+publish_to: none
 
 environment:
   sdk: '>=2.18.2 <3.0.0'
@@ -13,6 +14,8 @@ dependencies:
     sdk: flutter
   meta: ^1.8.0
   plugin_platform_interface: ^2.0.2
+  blue_handle_data:
+    path: packages/blue_handle_data
 
 dev_dependencies:
   flutter_test:
