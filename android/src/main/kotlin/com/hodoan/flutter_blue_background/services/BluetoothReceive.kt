@@ -3,12 +3,14 @@ package com.hodoan.flutter_blue_background.services
 import android.Manifest
 import android.app.Activity
 import android.bluetooth.*
+import android.bluetooth.le.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
@@ -25,9 +27,13 @@ class BluetoothReceive(
     private val activity: Activity?,
     private val adapter: BluetoothAdapter?,
     binaryMessenger: BinaryMessenger,
+    private val serviceUuids: List<UUID>?,
+    private val baseUUID: String?,
+    private val charUUID: String?,
 ) :
     BroadcastReceiver(),
     IActionBlueLe {
+    private var scanner: BluetoothLeScanner? = null
     private val tag: String = "BluetoothReceive"
 
     private var eventChannel: EventChannel = EventChannel(
@@ -53,30 +59,26 @@ class BluetoothReceive(
     @RequiresApi(Build.VERSION_CODES.S)
     @SuppressWarnings("MissingPermission")
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d(tag, "onReceive: ")
         val action: String? = intent?.action
-
-        if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED) {
-            if(isNotScanCancel)
-                    adapter?.startDiscovery()
-                }
-        else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+        if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
+            if (isNotScanCancel)
+                startScan()
+        } else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
             when (intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                 BluetoothAdapter.STATE_OFF -> {
                     Log.d(tag, "onReceive: STATE_OFF ")
                 }
                 BluetoothAdapter.STATE_TURNING_OFF -> {
                     Log.d(tag, "onReceive: STATE_TURNING_OFF ")
-                    val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                    startActivityForResult(activity!!, enableBtIntent, 1, Bundle())
+                    settingsBlue()
                 }
                 BluetoothAdapter.STATE_ON -> {
                     Log.d(tag, "onReceive: STATE_ON ")
-                    adapter?.startDiscovery()
+                    startScan()
                 }
                 BluetoothAdapter.STATE_TURNING_ON -> {
                     Log.d(tag, "onReceive: STATE_TURNING_ON ")
-                    adapter?.startDiscovery()
+                    startScan()
                 }
                 else -> {
                     Log.d(tag, "onReceive: else ")
@@ -91,33 +93,19 @@ class BluetoothReceive(
                 BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                     Log.d(tag, "onReceive: ACTION_ACL_DISCONNECTED ")
                     isNotScanCancel = true
-                    adapter?.startDiscovery()
-                }
-                BluetoothDevice.ACTION_FOUND -> {
-                    Log.d(tag, "onReceive: ACTION_FOUND ")
-                    intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                        ?.let {
-                            if (it.name != null) {
-                                Log.d(tag, "onReceive: ${it.address} ${it.name}")
-                            }
-                            if (it.address == "C0:26:DA:18:FE:D0") {
-                                if (context != null) {
-                                    adapter?.cancelDiscovery()
-                                    isNotScanCancel = false
-                                    gatt = it.connectGatt(context, true, mGattCallback)
-                                }
-                            }
-                        }
+                    startScan()
                 }
                 else -> Log.d(tag, "onReceive: ACTION $action")
             }
         }
     }
 
-    private var gatt: BluetoothGatt? = null
+    private fun settingsBlue() {
+        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        startActivityForResult(activity!!, enableBtIntent, 1, Bundle())
+    }
 
-    private val baseUUID: UUID = UUID.fromString("00001523-1212-efde-1523-785feabcd123")
-    private val charUUID: UUID = UUID.fromString("00001524-1212-efde-1523-785feabcd123")
+    private var gatt: BluetoothGatt? = null
 
     private val mGattCallback: BluetoothGattCallback by lazy {
         @SuppressWarnings("MissingPermission")
@@ -153,7 +141,7 @@ class BluetoothReceive(
 
     //Get the 'real' data out of characteristic
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
-        if (charUUID == characteristic.uuid) {
+        if (UUID.fromString(charUUID) == characteristic.uuid) {
             val result = characteristic.value.asList().map {
                 it.toInt()
             }
@@ -165,10 +153,9 @@ class BluetoothReceive(
 
     @SuppressWarnings("MissingPermission")
     override fun writeCharacteristic(bytes: ByteArray) {
-        sink?.success("0")
-        val service = gatt?.getService(baseUUID) ?: return
+        val service = gatt?.getService(UUID.fromString(this.baseUUID)) ?: return
         service.characteristics?.forEach { Log.d(tag, "writeCharacteristic: ${it.uuid}") }
-        val characteristic = service.getCharacteristic(charUUID) ?: return
+        val characteristic = service.getCharacteristic(UUID.fromString(charUUID)) ?: return
         characteristic.value = bytes
         gatt?.setCharacteristicNotification(characteristic, true)
         gatt?.writeCharacteristic(characteristic)
@@ -186,8 +173,37 @@ class BluetoothReceive(
     }
 
     @SuppressWarnings("MissingPermission")
+    private val scanCallback: ScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            super.onScanResult(callbackType, result)
+            val device = result?.device ?: return
+            Log.d(tag, "onScanResult: ${device.address} ${device.name}")
+            if (context != null) {
+                scanner?.stopScan(this)
+                isNotScanCancel = false
+                gatt = device.connectGatt(context, true, mGattCallback)
+            }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            super.onScanFailed(errorCode)
+            Log.d("ScanCallback", "onScanFailed: $errorCode")
+        }
+    }
+
+    @SuppressWarnings("MissingPermission")
     override fun startScan() {
-        Log.d("TAG", "startScan: ")
-        adapter?.startDiscovery()
+        if (adapter?.isEnabled == false) {
+            settingsBlue()
+            return
+        }
+        scanner = adapter?.bluetoothLeScanner
+        val arrFilter: List<ScanFilter> = this.serviceUuids
+            ?.map {
+                ScanFilter.Builder().setServiceUuid(ParcelUuid(it)).build()
+            }?.toList() ?: ArrayList()
+        val scanSettings: ScanSettings =
+            ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+        scanner?.startScan(arrFilter, scanSettings, scanCallback)
     }
 }

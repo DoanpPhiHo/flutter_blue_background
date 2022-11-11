@@ -24,6 +24,11 @@ class MockFlutterBlueBackgroundPlatform
   Future<bool> writeCharacteristic(List<int> list) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<bool> initial(BlueBgModel bgModel) {
+    throw UnimplementedError();
+  }
 }
 
 void main() {
@@ -36,7 +41,7 @@ void main() {
 
   test('getPlatformVersion', () async {
     final FlutterBlueBackground flutterBlueBackgroundPlugin =
-        FlutterBlueBackground();
+        FlutterBlueBackground.instance;
     final MockFlutterBlueBackgroundPlatform fakePlatform =
         MockFlutterBlueBackgroundPlatform();
     FlutterBlueBackgroundPlatform.instance = fakePlatform;

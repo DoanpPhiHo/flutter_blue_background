@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -5,8 +7,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_blue_background/flutter_blue_background.dart';
 import 'package:flutter_blue_background/models/meter/gen_bgm_meter.dart';
 
+extension ParseString on List<int> {
+  String get parse {
+    return '[${map((e) => e.toString()).join(', ')}]';
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterBlueBackground.instance.initial(BlueBgModel());
   runApp(const MyApp());
 }
 
@@ -20,7 +29,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   String text = '';
-  final _flutterBlueBackgroundPlugin = FlutterBlueBackground();
 
   @override
   void initState() {
@@ -30,16 +38,17 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    _flutterBlueBackgroundPlugin.startBackgroundBluetooth();
-    _flutterBlueBackgroundPlugin.subscriptionData().listen((event) {
-      setState(() => text = event is List ? event[0].toString() : event);
+    FlutterBlueBackground.instance.startBackgroundBluetooth();
+    FlutterBlueBackground.instance.subscriptionData().listen((event) {
+      log(event);
+      setState(() => text = event is List ? (event.cast<int>().parse) : event);
     });
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
       platformVersion =
-          await _flutterBlueBackgroundPlugin.getPlatformVersion() ??
+          await FlutterBlueBackground.instance.getPlatformVersion() ??
               'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
@@ -68,10 +77,24 @@ class _MyAppState extends State<MyApp> {
             Center(child: Text('Running on: $_platformVersion\n')),
             Center(child: Text('data: $text\n')),
             ElevatedButton(
-              onPressed: () {
-                _flutterBlueBackgroundPlugin.writeCharacteristic(
-                  GenBgmMeter.instance.generateDeviceClockTimeCmd(),
-                );
+              onPressed: () async {
+                await Future.wait([
+                  // FlutterBlueBackground.instance.writeCharacteristic(
+                  //   GenBgmMeter.instance.generateDeviceClockTimeCmd,
+                  // ),
+                  // FlutterBlueBackground.instance.writeCharacteristic(
+                  //   GenBgmMeter.instance.generateDeviceModelCmd,
+                  // ),
+                  // FlutterBlueBackground.instance.writeCharacteristic(
+                  //   GenBgmMeter.instance.generateStorageNumberOfDataCmd,
+                  // ),
+                  // FlutterBlueBackground.instance.writeCharacteristic(
+                  //   GenBgmMeter.instance.generateStorageDataDateTimeCmd(),
+                  // ),
+                  FlutterBlueBackground.instance.writeCharacteristic(
+                    GenBgmMeter.instance.generateStorageDataResultCmd(),
+                  ),
+                ]);
               },
               child: const Text('WriteData'),
             )

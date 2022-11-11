@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'flutter_blue_background_platform_interface.dart';
+import 'models/blue_bg_model/blue_bg_model.dart';
 
 /// An implementation of [FlutterBlueBackgroundPlatform] that uses method channels.
 class MethodChannelFlutterBlueBackground extends FlutterBlueBackgroundPlatform {
@@ -31,6 +32,14 @@ class MethodChannelFlutterBlueBackground extends FlutterBlueBackgroundPlatform {
     log('message flutter writeCharacteristic');
     return await methodChannel.invokeMethod<bool>(
             'writeCharacteristic', list) ??
+        false;
+  }
+
+  @override
+  Future<bool> initial(BlueBgModel bgModel) async {
+    log('message flutter writeCharacteristic');
+    return await methodChannel.invokeMethod<bool>(
+            'initial', bgModel.toJson()) ??
         false;
   }
 

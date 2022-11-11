@@ -30,6 +30,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>using blue</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>using blue</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
@@ -55,9 +59,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>using blue</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>using blue</string>
 </dict>
 </plist>

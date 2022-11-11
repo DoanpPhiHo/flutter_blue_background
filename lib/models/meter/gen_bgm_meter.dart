@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:typed_data';
 
 class GenBgmMeter {
@@ -5,10 +6,10 @@ class GenBgmMeter {
   static final GenBgmMeter instance = GenBgmMeter._();
 
   /// 0x23: Read device clock time
-  List<int> generateDeviceClockTimeCmd() => _generateCmd(cmd: 35);
+  List<int> get generateDeviceClockTimeCmd => _generateCmd(cmd: 35);
 
   /// 0x24: Read device model
-  List<int> generateDeviceModelCmd() => _generateCmd(cmd: 36);
+  List<int> get generateDeviceModelCmd => _generateCmd(cmd: 36);
 
   /// 0x25: Read storage data date and time
   List<int> generateStorageDataDateTimeCmd({int index = 0}) =>
@@ -19,7 +20,7 @@ class GenBgmMeter {
       _generateCmd(cmd: 38, data0: index);
 
   /// 0x2b: Read storage number of data
-  List<int> generateStorageNumberOfDataCmd() => _generateCmd(cmd: 43);
+  List<int> get generateStorageNumberOfDataCmd => _generateCmd(cmd: 43);
   List<int> _generateCmd({
     required int cmd,
     int data0 = 0,
@@ -27,6 +28,7 @@ class GenBgmMeter {
     int data2 = 0,
     int data3 = 0,
   }) {
+    log(cmd.toString());
     final List<int> array =
         MeterCmdUtil.instance.appendOneByteCheckSumToCmd(Uint8List.fromList([
       81,

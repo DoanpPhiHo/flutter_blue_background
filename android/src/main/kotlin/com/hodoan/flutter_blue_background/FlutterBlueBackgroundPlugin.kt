@@ -5,9 +5,12 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
+import com.hodoan.flutter_blue_background.convert.UuidConvert
 import com.hodoan.flutter_blue_background.services.BluetoothReceive
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
@@ -18,6 +21,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import java.util.*
+
 
 /** FlutterBlueBackgroundPlugin */
 class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -25,6 +30,10 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
     private lateinit var binaryMessenger: BinaryMessenger
     private var bluetoothReceive: BluetoothReceive? = null
     private var context: Context? = null
+
+    private var serviceUuids: List<UUID>? = null
+    private var baseUUID: String? = null
+    private var charUUID: String? = null
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPluginBinding) {
         binaryMessenger = flutterPluginBinding.binaryMessenger
@@ -41,22 +50,32 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
                 Log.d("writeCharacteristic", "onMethodCall: ")
                 writeCharacteristic(call.arguments, result)
             }
+            "initial" -> initialSettings(call, result)
             else -> result.notImplemented()
         }
     }
 
+    private fun initialSettings(call: MethodCall, result: Result) {
+        val data = call.arguments as Map<*, *>
+        serviceUuids = (data["uuidService"] as List<*>).map { it as ByteArray }
+            .map { UuidConvert().convert16BitToUuid(it) }
+        baseUUID = data["baseUUID"] as String
+        charUUID = data["charUUID"] as String
+        result.success(null)
+    }
+
     @SuppressWarnings("MissingPermission")
     private fun writeCharacteristic(arguments: Any?, result: Result) {
-        val listInt: List<Int> = arguments as List<Int>
+        val listInt: List<Byte> = arguments as List<Byte>
         val data = byteArrayOf(
-            listInt[0].toByte(),
-            listInt[1].toByte(),
-            listInt[2].toByte(),
-            listInt[3].toByte(),
-            listInt[4].toByte(),
-            listInt[5].toByte(),
-            listInt[6].toByte(),
-            listInt[7].toByte(),
+            listInt[0],
+            listInt[1],
+            listInt[2],
+            listInt[3],
+            listInt[4],
+            listInt[5],
+            listInt[6],
+            listInt[7],
         )
         Log.d("writeCharacteristic", "writeCharacteristic: ")
         bluetoothReceive?.writeCharacteristic(data)
@@ -74,7 +93,10 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         val bluetoothManager: BluetoothManager? =
             context?.applicationContext?.getSystemService(BluetoothManager::class.java)
         val bluetoothAdapter: BluetoothAdapter? = bluetoothManager?.adapter
-        bluetoothReceive = BluetoothReceive(context, activity, bluetoothAdapter, binaryMessenger)
+        bluetoothReceive = BluetoothReceive(
+            context, activity, bluetoothAdapter,
+            binaryMessenger, serviceUuids, baseUUID, charUUID
+        )
 
         context?.applicationContext?.registerReceiver(bluetoothReceive, filter)
         bluetoothReceive?.startScan()

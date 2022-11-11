@@ -1,6 +1,7 @@
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'flutter_blue_background_method_channel.dart';
+import 'models/blue_bg_model/blue_bg_model.dart';
 
 abstract class FlutterBlueBackgroundPlatform extends PlatformInterface {
   /// Constructs a FlutterBlueBackgroundPlatform.
@@ -38,6 +39,10 @@ abstract class FlutterBlueBackgroundPlatform extends PlatformInterface {
   }
 
   Future<bool> writeCharacteristic(List<int> list) {
+    throw UnimplementedError('writeCharacteristic() has not been implemented.');
+  }
+
+  Future<bool> initial(BlueBgModel bgModel) {
     throw UnimplementedError('writeCharacteristic() has not been implemented.');
   }
 }
