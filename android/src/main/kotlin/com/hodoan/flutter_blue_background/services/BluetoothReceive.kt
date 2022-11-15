@@ -2,7 +2,6 @@ package com.hodoan.flutter_blue_background.services
 
 import android.Manifest
 import android.app.Activity
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.bluetooth.*
@@ -20,7 +19,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
+import com.hodoan.flutter_blue_background.FlutterBlueBackgroundPlugin
 import com.hodoan.flutter_blue_background.R
 import com.hodoan.flutter_blue_background.interfaces.IActionBlueLe
 import io.flutter.plugin.common.BinaryMessenger
@@ -52,10 +51,8 @@ class BluetoothReceive(
 
     private var isNotScanCancel = true
 
-    private val notificationId:Int = 1998
-    val channelId = "flutter_blue_background.services"
+    private val notificationId: Int = 1998
     private val contentTitle = "Blue Background Service"
-    private val contentText = "Start"
 
     init {
         eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
@@ -69,55 +66,18 @@ class BluetoothReceive(
         })
     }
 
-    fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val mChannel = NotificationChannel(
-                channelId,
-                "General Notifications",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            mChannel.description = "This is default channel used for all other notifications"
-
-            val notificationManager =
-                context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
-            notificationManager?.createNotificationChannel(mChannel)
-        }
-    }
-
-    fun notification() {
-        context?.let {
-            val intent = Intent(it, ContactsContract.Profile::class.java)
-            val pendingIntent =
-                PendingIntent.getActivity(it, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-            val builder =
-                NotificationCompat.Builder(it, channelId)
-                    .setSmallIcon(R.drawable.ic_stat_name)
-                    .setContentTitle(contentTitle)
-                    .setContentText(contentText)
-                    .setPriority(NotificationCompat.PRIORITY_MAX)
-            builder.setContentIntent(pendingIntent).setAutoCancel(false)
-            builder.setOngoing(true)
-            val manager =
-                it.getSystemService(NotificationManager::class.java)
-            with(manager) {
-                notify(notificationId, builder.build())
-            }
-        }
-    }
-
     private fun notification(text: String) {
         context?.let {
             val intent = Intent(it, ContactsContract.Profile::class.java)
             val pendingIntent =
                 PendingIntent.getActivity(it, 0, intent, PendingIntent.FLAG_IMMUTABLE)
             val builder =
-                NotificationCompat.Builder(it, channelId)
+                NotificationCompat.Builder(it, FlutterBlueBackgroundPlugin::channelId.toString())
                     .setSmallIcon(R.drawable.ic_stat_name)
                     .setContentTitle(contentTitle)
                     .setContentText(text)
                     .setPriority(NotificationCompat.PRIORITY_MAX)
             builder.setContentIntent(pendingIntent).setAutoCancel(false)
-            builder.setOngoing(true)
             val manager =
                 it.getSystemService(NotificationManager::class.java)
             with(manager) {
@@ -258,15 +218,10 @@ class BluetoothReceive(
 
     @SuppressWarnings("MissingPermission")
     override fun startScan() {
-        activity?.let {
-            if (ContextCompat.checkSelfPermission(
-                    it,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestLocationPermission()
-                return
-            }
+        if(context?.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            !=PackageManager.PERMISSION_GRANTED){
+            requestLocationPermission()
+            return
         }
         if (adapter?.isEnabled == false) {
             settingsBlue()
@@ -291,31 +246,28 @@ class BluetoothReceive(
         when (requestCode) {
             99 -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(
-                            activity!!,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ) == PackageManager.PERMISSION_GRANTED
+                    if (context?.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED
                     ) {
                         startScan()
+                    } else {
+                        requestLocationPermission()
                     }
-
-                } else {
-                    requestLocationPermission()
                 }
             }
         }
-        return true
+            return true
     }
 
-    private fun requestLocationPermission() {
-        activity?.let {
-            ActivityCompat.requestPermissions(
-                it,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                ),
-                99
-            )
+        private fun requestLocationPermission() {
+            activity?.let {
+                ActivityCompat.requestPermissions(
+                    it,
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                    ),
+                    99
+                )
+            }
         }
     }
-}

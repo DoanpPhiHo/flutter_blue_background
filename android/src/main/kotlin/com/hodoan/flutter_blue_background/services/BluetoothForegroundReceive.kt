@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.ParcelUuid
 import android.provider.ContactsContract
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.hodoan.flutter_blue_background.FlutterBlueBackgroundPlugin
@@ -30,7 +29,6 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
     private var context: Context? = null
 
     private val notificationId = 1998
-    private val channelId = "flutter_blue_background.services"
     private val contentTitle = "Blue Background Service"
 
     private var charUUID: String? = null
@@ -43,13 +41,12 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
             val pendingIntent =
                 PendingIntent.getActivity(it, 0, intent, PendingIntent.FLAG_IMMUTABLE)
             val builder =
-                NotificationCompat.Builder(it, channelId)
+                NotificationCompat.Builder(it, FlutterBlueBackgroundPlugin::channelId.toString())
                     .setSmallIcon(R.drawable.ic_stat_name)
                     .setContentTitle(contentTitle)
                     .setContentText("Foreground $text")
                     .setPriority(NotificationCompat.PRIORITY_MAX)
             builder.setContentIntent(pendingIntent).setAutoCancel(false)
-            builder.setOngoing(true)
             val manager =
                 it.getSystemService(NotificationManager::class.java)
             with(manager) {
@@ -61,7 +58,7 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
     @RequiresApi(Build.VERSION_CODES.S)
     @SuppressWarnings("MissingPermission")
     override fun onReceive(context: Context?, intent: Intent?) {
-        Toast.makeText(context,"onReceive BG ${intent?.action}",Toast.LENGTH_SHORT).show()
+        if (checkBgActive()) return
         initBg(context)
         when (val action: String? = intent?.action) {
             BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
@@ -103,6 +100,13 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
         }
     }
 
+    private fun checkBgActive(): Boolean {
+        return context?.applicationContext?.applicationContext?.getSharedPreferences(
+            "flutter_blue_background",
+            Context.MODE_PRIVATE
+        )?.getBoolean(FlutterBlueBackgroundPlugin::isActiveBG.toString(), false) ?: false
+    }
+
     private fun initBg(context: Context?) {
         if (this.context == null) {
             this.context = context
@@ -110,19 +114,26 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
                 context?.applicationContext?.getSystemService(BluetoothManager::class.java)
             adapter = bluetoothManager?.adapter
 
-            val sharedPreferences = context?.applicationContext?.applicationContext?.getSharedPreferences(
-                "flutter_blue_background",
-                Context.MODE_PRIVATE
-            )
+            val sharedPreferences =
+                context?.applicationContext?.applicationContext?.getSharedPreferences(
+                    "flutter_blue_background",
+                    Context.MODE_PRIVATE
+                )
 
             serviceUuids = sharedPreferences?.getString(
                 FlutterBlueBackgroundPlugin::serviceUUIDStr.toString(),
                 null
             )?.split(",")?.toList()
             baseUUID =
-                sharedPreferences?.getString(FlutterBlueBackgroundPlugin::baseUUIDStr.toString(), null)
+                sharedPreferences?.getString(
+                    FlutterBlueBackgroundPlugin::baseUUIDStr.toString(),
+                    null
+                )
             charUUID =
-                sharedPreferences?.getString(FlutterBlueBackgroundPlugin::charUUIDStr.toString(), null)
+                sharedPreferences?.getString(
+                    FlutterBlueBackgroundPlugin::charUUIDStr.toString(),
+                    null
+                )
 
             notification("Start")
         }

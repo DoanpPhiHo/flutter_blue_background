@@ -26,11 +26,14 @@ import java.util.*
 
 
 /** FlutterBlueBackgroundPlugin */
-class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAware{
-    private var sharedPreferences:SharedPreferences? = null
-    val serviceUUIDStr:String = "serviceUuids"
+class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
+    private var sharedPreferences: SharedPreferences? = null
+    val serviceUUIDStr: String = "serviceUuids"
     val baseUUIDStr = "baseUUID"
     val charUUIDStr = "charUUID"
+    val isActiveBG = "isActiveBG"
+    val channelId = "flutter_blue_background.services"
+
     private lateinit var channel: MethodChannel
     private lateinit var binaryMessenger: BinaryMessenger
     private var bluetoothReceive: BluetoothReceive? = null
@@ -45,7 +48,10 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAwa
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_blue_background")
         channel.setMethodCallHandler(this)
         context = flutterPluginBinding.applicationContext
-        sharedPreferences = flutterPluginBinding.applicationContext.getSharedPreferences("flutter_blue_background",Context.MODE_PRIVATE)
+        sharedPreferences = flutterPluginBinding.applicationContext.getSharedPreferences(
+            "flutter_blue_background",
+            Context.MODE_PRIVATE
+        )
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -65,9 +71,9 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAwa
         baseUUID = data["baseUUID"] as String
         charUUID = data["charUUID"] as String
         sharedPreferences?.edit()?.apply {
-            putString(serviceUUIDStr,serviceUuids?.map { it.toString() }?.joinToString { "," })
-            putString(baseUUIDStr,baseUUID)
-            putString(charUUIDStr,charUUID)
+            putString(serviceUUIDStr, serviceUuids?.map { it.toString() }?.joinToString { "," })
+            putString(baseUUIDStr, baseUUID)
+            putString(charUUIDStr, charUUID)
         }?.apply()
         result.success(null)
     }
@@ -91,13 +97,16 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAwa
     }
 
     private fun startBackground(result: Result) {
+        sharedPreferences?.edit()?.apply {
+            putBoolean(isActiveBG, true)
+        }?.apply()
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
         filter.addAction(BluetoothDevice.ACTION_FOUND)
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-        
+
         val bluetoothManager: BluetoothManager? =
             context?.applicationContext?.getSystemService(BluetoothManager::class.java)
         val bluetoothAdapter: BluetoothAdapter? = bluetoothManager?.adapter
@@ -108,11 +117,9 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAwa
 
         context?.applicationContext?.registerReceiver(bluetoothReceive, filter)
         val intent = Intent(context, RestartService::class.java)
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context?.applicationContext?.startService(intent)
         }
-        bluetoothReceive?.createNotificationChannel()
-        bluetoothReceive?.notification()
         bluetoothReceive?.startScan()
         result.success(true)
 
@@ -144,8 +151,11 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAwa
 
     override fun onDetachedFromActivity() {
         val intent = Intent(context, RestartService::class.java)
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context?.applicationContext?.startForegroundService(intent)
         }
+        sharedPreferences?.edit()?.apply {
+            putBoolean(isActiveBG, false)
+        }?.apply()
     }
 }
