@@ -1,17 +1,18 @@
 package com.hodoan.flutter_blue_background
 
-import android.app.Activity
+import android.app.*
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
-import androidx.core.content.ContextCompat.startActivity
 import com.hodoan.flutter_blue_background.convert.UuidConvert
 import com.hodoan.flutter_blue_background.services.BluetoothReceive
+import com.hodoan.flutter_blue_background.services.RestartService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -25,7 +26,11 @@ import java.util.*
 
 
 /** FlutterBlueBackgroundPlugin */
-class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
+class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAware{
+    private var sharedPreferences:SharedPreferences? = null
+    val serviceUUIDStr:String = "serviceUuids"
+    val baseUUIDStr = "baseUUID"
+    val charUUIDStr = "charUUID"
     private lateinit var channel: MethodChannel
     private lateinit var binaryMessenger: BinaryMessenger
     private var bluetoothReceive: BluetoothReceive? = null
@@ -40,16 +45,14 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_blue_background")
         channel.setMethodCallHandler(this)
         context = flutterPluginBinding.applicationContext
+        sharedPreferences = flutterPluginBinding.applicationContext.getSharedPreferences("flutter_blue_background",Context.MODE_PRIVATE)
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "getPlatformVersion" -> getPlatformVersion(result)
             "startBackground" -> startBackground(result)
-            "writeCharacteristic" -> {
-                Log.d("writeCharacteristic", "onMethodCall: ")
-                writeCharacteristic(call.arguments, result)
-            }
+            "writeCharacteristic" -> writeCharacteristic(call.arguments, result)
             "initial" -> initialSettings(call, result)
             else -> result.notImplemented()
         }
@@ -89,7 +92,7 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-
+        
         val bluetoothManager: BluetoothManager? =
             context?.applicationContext?.getSystemService(BluetoothManager::class.java)
         val bluetoothAdapter: BluetoothAdapter? = bluetoothManager?.adapter
@@ -99,6 +102,12 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         )
 
         context?.applicationContext?.registerReceiver(bluetoothReceive, filter)
+        val intent = Intent(context, RestartService::class.java)
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context?.applicationContext?.startService(intent)
+        }
+        bluetoothReceive?.createNotificationChannel()
+        bluetoothReceive?.notification()
         bluetoothReceive?.startScan()
         result.success(true)
 

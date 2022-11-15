@@ -1,6 +1,8 @@
 import 'flutter_blue_background_platform_interface.dart';
 import 'models/blue_bg_model/blue_bg_model.dart';
 
+export 'package:blue_handle_data/blue_handle_data.dart';
+
 export 'models/blue_bg_model/blue_bg_model.dart';
 export 'models/uuid.dart';
 

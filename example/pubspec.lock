@@ -8,6 +8,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.9.0"
+  blue_async:
+    dependency: transitive
+    description:
+      path: "."
+      ref: master
+      resolved-ref: "182b6ec6f36e09ad23ea0555ca60839119219bc0"
+      url: "https://github.com/DoanpPhiHo/blue_async"
+    source: git
+    version: "0.0.1"
   blue_handle_data:
     dependency: transitive
     description:

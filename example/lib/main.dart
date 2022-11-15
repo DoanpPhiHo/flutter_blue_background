@@ -13,6 +13,10 @@ extension ParseString on List<int> {
   }
 }
 
+extension StringTime on DateTime {
+  String get valueStr => '$day $month $year $hour:$minute:$second';
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterBlueBackground.instance.initial(BlueBgModel());
@@ -29,6 +33,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   String text = '';
+  List<int> list = [107, 45, 55, 16];
 
   @override
   void initState() {
@@ -40,8 +45,16 @@ class _MyAppState extends State<MyApp> {
   Future<void> initPlatformState() async {
     FlutterBlueBackground.instance.startBackgroundBluetooth();
     FlutterBlueBackground.instance.subscriptionData().listen((event) {
-      log(event);
       setState(() => text = event is List ? (event.cast<int>().parse) : event);
+      if (event is List) {
+        final data = event.cast<int>();
+        log(data.parse);
+        if (data.any((e) => e == 35)) {
+          final res = data.sublist(2, 6);
+          log(res.parse);
+          setState(() => list = res);
+        }
+      }
     });
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
@@ -76,25 +89,29 @@ class _MyAppState extends State<MyApp> {
           children: [
             Center(child: Text('Running on: $_platformVersion\n')),
             Center(child: Text('data: $text\n')),
+            if (list.isNotEmpty)
+              Text(MeterUtil.instance.readBGMTime(list).valueStr),
             ElevatedButton(
               onPressed: () async {
-                await Future.wait([
-                  // FlutterBlueBackground.instance.writeCharacteristic(
-                  //   GenBgmMeter.instance.generateDeviceClockTimeCmd,
-                  // ),
-                  // FlutterBlueBackground.instance.writeCharacteristic(
-                  //   GenBgmMeter.instance.generateDeviceModelCmd,
-                  // ),
-                  // FlutterBlueBackground.instance.writeCharacteristic(
-                  //   GenBgmMeter.instance.generateStorageNumberOfDataCmd,
-                  // ),
-                  // FlutterBlueBackground.instance.writeCharacteristic(
-                  //   GenBgmMeter.instance.generateStorageDataDateTimeCmd(),
-                  // ),
-                  FlutterBlueBackground.instance.writeCharacteristic(
-                    GenBgmMeter.instance.generateStorageDataResultCmd(),
-                  ),
-                ]);
+                await FlutterBlueBackground.instance.writeCharacteristic(
+                  GenBgmMeter.instance.generateDeviceClockTimeCmd,
+                );
+                await Future.delayed(const Duration(seconds: 1));
+                await FlutterBlueBackground.instance.writeCharacteristic(
+                  GenBgmMeter.instance.generateDeviceModelCmd,
+                );
+                await Future.delayed(const Duration(seconds: 1));
+                await FlutterBlueBackground.instance.writeCharacteristic(
+                  GenBgmMeter.instance.generateStorageNumberOfDataCmd,
+                );
+                await Future.delayed(const Duration(seconds: 1));
+                await FlutterBlueBackground.instance.writeCharacteristic(
+                  GenBgmMeter.instance.generateStorageDataDateTimeCmd(),
+                );
+                await Future.delayed(const Duration(seconds: 1));
+                await FlutterBlueBackground.instance.writeCharacteristic(
+                  GenBgmMeter.instance.generateStorageDataResultCmd(),
+                );
               },
               child: const Text('WriteData'),
             )
