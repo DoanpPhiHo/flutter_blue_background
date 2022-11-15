@@ -52,8 +52,8 @@ class BluetoothReceive(
 
     private var isNotScanCancel = true
 
-    private val notificationId = 1998
-    private val channelId = "flutter_blue_background.services"
+    private val notificationId:Int = 1998
+    val channelId = "flutter_blue_background.services"
     private val contentTitle = "Blue Background Service"
     private val contentText = "Start"
 

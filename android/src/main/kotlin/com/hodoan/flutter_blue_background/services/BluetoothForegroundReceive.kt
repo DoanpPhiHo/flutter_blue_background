@@ -1,7 +1,5 @@
 package com.hodoan.flutter_blue_background.services
 
-import android.Manifest
-import android.app.Activity
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.bluetooth.*
@@ -9,30 +7,23 @@ import android.bluetooth.le.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Bundle
 import android.os.ParcelUuid
 import android.provider.ContactsContract
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import com.hodoan.flutter_blue_background.FlutterBlueBackgroundPlugin
 import com.hodoan.flutter_blue_background.R
 import com.hodoan.flutter_blue_background.interfaces.IActionBlueLe
-import io.flutter.embedding.engine.plugins.activity.ActivityAware
-import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
-import io.flutter.plugin.common.PluginRegistry
 import java.util.*
 
-class BluetoothForegroundReceive: BroadcastReceiver(),
-    IActionBlueLe, ActivityAware, PluginRegistry.RequestPermissionsResultListener {
+class BluetoothForegroundReceive : BroadcastReceiver(),
+    IActionBlueLe {
     private var scanner: BluetoothLeScanner? = null
     private var adapter: BluetoothAdapter? = null
     private val tag: String = "BluetoothReceive"
-    private var activity: Activity? = null
 
     private var isNotScanCancel = true
 
@@ -42,9 +33,9 @@ class BluetoothForegroundReceive: BroadcastReceiver(),
     private val channelId = "flutter_blue_background.services"
     private val contentTitle = "Blue Background Service"
 
-    private var charUUID:String? = null
-    private var baseUUID:String? = null
-    private var serviceUuids:List<String>? = null
+    private var charUUID: String? = null
+    private var baseUUID: String? = null
+    private var serviceUuids: List<String>? = null
 
     private fun notification(text: String) {
         context?.let {
@@ -55,7 +46,7 @@ class BluetoothForegroundReceive: BroadcastReceiver(),
                 NotificationCompat.Builder(it, channelId)
                     .setSmallIcon(R.drawable.ic_stat_name)
                     .setContentTitle(contentTitle)
-                    .setContentText(text)
+                    .setContentText("Foreground $text")
                     .setPriority(NotificationCompat.PRIORITY_MAX)
             builder.setContentIntent(pendingIntent).setAutoCancel(false)
             builder.setOngoing(true)
@@ -70,6 +61,8 @@ class BluetoothForegroundReceive: BroadcastReceiver(),
     @RequiresApi(Build.VERSION_CODES.S)
     @SuppressWarnings("MissingPermission")
     override fun onReceive(context: Context?, intent: Intent?) {
+        Toast.makeText(context,"onReceive BG ${intent?.action}",Toast.LENGTH_SHORT).show()
+        initBg(context)
         when (val action: String? = intent?.action) {
             BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                 notification("Discovery Finished")
@@ -110,11 +103,35 @@ class BluetoothForegroundReceive: BroadcastReceiver(),
         }
     }
 
+    private fun initBg(context: Context?) {
+        if (this.context == null) {
+            this.context = context
+            val bluetoothManager: BluetoothManager? =
+                context?.applicationContext?.getSystemService(BluetoothManager::class.java)
+            adapter = bluetoothManager?.adapter
+
+            val sharedPreferences = context?.applicationContext?.applicationContext?.getSharedPreferences(
+                "flutter_blue_background",
+                Context.MODE_PRIVATE
+            )
+
+            serviceUuids = sharedPreferences?.getString(
+                FlutterBlueBackgroundPlugin::serviceUUIDStr.toString(),
+                null
+            )?.split(",")?.toList()
+            baseUUID =
+                sharedPreferences?.getString(FlutterBlueBackgroundPlugin::baseUUIDStr.toString(), null)
+            charUUID =
+                sharedPreferences?.getString(FlutterBlueBackgroundPlugin::charUUIDStr.toString(), null)
+
+            notification("Start")
+        }
+    }
+
     @SuppressWarnings("MissingPermission")
     private fun settingsBlue() {
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-        ActivityCompat.startActivityForResult(activity!!, enableBtIntent, 1, Bundle())
-//        adapter?.enable()
+        context?.applicationContext?.startActivity(enableBtIntent)
     }
 
     private var gatt: BluetoothGatt? = null
@@ -156,9 +173,7 @@ class BluetoothForegroundReceive: BroadcastReceiver(),
             val result = characteristic.value.map {
                 java.lang.Byte.toUnsignedInt(it).toString(radix = 10).padStart(2, '0').toInt()
             }
-            activity?.runOnUiThread {
-                Log.d("broadcastUpdate", "broadcastUpdate: $result")
-            }
+            Log.d("broadcastUpdate", "broadcastUpdate: $result")
         }
     }
 
@@ -199,16 +214,6 @@ class BluetoothForegroundReceive: BroadcastReceiver(),
 
     @SuppressWarnings("MissingPermission")
     override fun startScan() {
-        activity?.let {
-            if (ContextCompat.checkSelfPermission(
-                    it,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestLocationPermission()
-                return
-            }
-        }
         if (adapter?.isEnabled == false) {
             settingsBlue()
             return
@@ -220,90 +225,6 @@ class BluetoothForegroundReceive: BroadcastReceiver(),
             }?.toList()
         val scanSettings: ScanSettings =
             ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-        scanner?.startScan(arrFilter?:ArrayList(), scanSettings, scanCallback)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ): Boolean {
-        when (requestCode) {
-            99 -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(
-                            activity!!,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        startScan()
-                    }
-
-                } else {
-                    requestLocationPermission()
-                }
-            }
-        }
-        return true
-    }
-
-    private fun requestLocationPermission() {
-        activity?.let {
-            ActivityCompat.requestPermissions(
-                it,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                ),
-                99
-            )
-        }
-    }
-
-    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        Log.d("onAttachedToActivity", "onAttachedToActivity: hehehe")
-        if (this.context == null){
-            context = binding.activity.applicationContext
-            val bluetoothManager: BluetoothManager? =
-                context?.applicationContext?.getSystemService(BluetoothManager::class.java)
-            adapter = bluetoothManager?.adapter
-        }
-
-        val sharedPreferences = binding.activity.applicationContext.getSharedPreferences("flutter_blue_background",
-            Context.MODE_PRIVATE)
-
-        serviceUuids = sharedPreferences.getString(FlutterBlueBackgroundPlugin::serviceUUIDStr.toString(),null)?.split(",")?.toList()
-        baseUUID = sharedPreferences.getString(FlutterBlueBackgroundPlugin::baseUUIDStr.toString(),null)
-        charUUID = sharedPreferences.getString(FlutterBlueBackgroundPlugin::charUUIDStr.toString(),null)
-
-        if (activity == null) {
-            if (ContextCompat.checkSelfPermission(
-                    binding.activity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestLocationPermission()
-                return
-            }
-        }
-        activity = binding.activity
-        if (ContextCompat.checkSelfPermission(
-                activity!!,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            startScan()
-        }
-    }
-
-    override fun onDetachedFromActivityForConfigChanges() {
-        TODO("Not yet implemented")
-    }
-
-    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onDetachedFromActivity() {
-        TODO("Not yet implemented")
+        scanner?.startScan(arrFilter ?: ArrayList(), scanSettings, scanCallback)
     }
 }

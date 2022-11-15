@@ -64,6 +64,11 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAwa
             .map { UuidConvert().convert16BitToUuid(it) }
         baseUUID = data["baseUUID"] as String
         charUUID = data["charUUID"] as String
+        sharedPreferences?.edit()?.apply {
+            putString(serviceUUIDStr,serviceUuids?.map { it.toString() }?.joinToString { "," })
+            putString(baseUUIDStr,baseUUID)
+            putString(charUUIDStr,charUUID)
+        }?.apply()
         result.success(null)
     }
 
@@ -138,6 +143,9 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler,ActivityAwa
     }
 
     override fun onDetachedFromActivity() {
-        TODO("Not yet implemented")
+        val intent = Intent(context, RestartService::class.java)
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context?.applicationContext?.startForegroundService(intent)
+        }
     }
 }
