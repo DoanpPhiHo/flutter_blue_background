@@ -22,7 +22,7 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
     IActionBlueLe {
     private var scanner: BluetoothLeScanner? = null
     private var adapter: BluetoothAdapter? = null
-    private val tag: String = "BluetoothReceive"
+    private val tag: String = "BluetoothForegroundReceive"
 
     private var isNotScanCancel = true
 

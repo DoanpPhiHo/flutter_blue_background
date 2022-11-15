@@ -21,6 +21,9 @@ class GenBgmMeter {
 
   /// 0x2b: Read storage number of data
   List<int> get generateStorageNumberOfDataCmd => _generateCmd(cmd: 43);
+
+  /// 0x35
+  List<int> get turnOff => _generateCmd(cmd: 80);
   List<int> _generateCmd({
     required int cmd,
     int data0 = 0,

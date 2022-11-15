@@ -3,6 +3,8 @@ description: A new Flutter plugin project.
 version: 0.0.1
 homepage:
 
+isar_version: &isar_version 3.0.4
+
 environment:
   sdk: '>=2.18.4 <3.0.0'
   flutter: ">=2.5.0"
@@ -12,9 +14,13 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  isar: *isar_version
+  isar_flutter_libs: *isar_version
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  isar_generator: *isar_version
+  build_runner: any
 flutter:
