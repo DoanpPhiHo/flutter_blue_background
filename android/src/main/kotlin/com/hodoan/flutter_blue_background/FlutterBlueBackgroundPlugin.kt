@@ -1,5 +1,6 @@
 package com.hodoan.flutter_blue_background
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -10,7 +11,10 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.Build
 import android.util.Log
+import com.google.gson.Gson
 import com.hodoan.flutter_blue_background.convert.UuidConvert
+import com.hodoan.flutter_blue_background.db_helper.BlueAsync
+import com.hodoan.flutter_blue_background.db_helper.DbBLueAsyncSettingsHelper
 import com.hodoan.flutter_blue_background.services.BluetoothReceive
 import com.hodoan.flutter_blue_background.services.RestartService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -60,8 +64,53 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
             "startBackground" -> startBackground(result)
             "writeCharacteristic" -> writeCharacteristic(call.arguments, result)
             "initial" -> initialSettings(call, result)
+            // db
+            "add_task_async" -> addTaskAsync(call, result)
+            "remove_task_async" -> removeTaskAsync(call, result)
+            "get_list_task_async" -> listTaskAsync(result)
             else -> result.notImplemented()
         }
+    }
+
+    @SuppressLint("Range")
+    private fun listTaskAsync(result: Result) {
+        context?.let {
+            val db = DbBLueAsyncSettingsHelper(it, null)
+            val resultDb = db.args() ?: return
+            val check = resultDb.moveToFirst()
+            if (!check) return
+            val list = ArrayList<BlueAsync>()
+            list.add(db.cursorToModel(resultDb))
+            while (resultDb.moveToNext()) {
+                list.add(db.cursorToModel(resultDb))
+            }
+            val gson = Gson()
+            result.success(gson.toJson(list))
+            return
+        }
+        result.success(null)
+    }
+
+    private fun removeTaskAsync(call: MethodCall, result: Result) {
+        context?.let {
+            val db = DbBLueAsyncSettingsHelper(it, null)
+            val data = call.arguments as String
+            val resultDb = db.remove(data)
+            result.success(resultDb)
+            return
+        }
+        result.success(false)
+    }
+
+    private fun addTaskAsync(call: MethodCall, result: Result) {
+        context?.let {
+            val db = DbBLueAsyncSettingsHelper(it, null)
+            val data = call.arguments as Map<*, *>
+            val resultDb = db.add(data["name_tasks"] as String, data["value"] as String)
+            result.success(resultDb)
+            return
+        }
+        result.success(false)
     }
 
     private fun initialSettings(call: MethodCall, result: Result) {

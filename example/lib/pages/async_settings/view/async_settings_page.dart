@@ -9,7 +9,8 @@ class AsyncSettings extends StatefulWidget {
   const AsyncSettings._({super.key});
 
   static Widget push(IAsyncSettings asyncSettings, {Key? key}) => BlocProvider(
-        create: (ctx) => AsyncSettingsBloc(asyncSettings),
+        create: (ctx) =>
+            AsyncSettingsBloc(asyncSettings)..add(AsyncInitSettingsEvent()),
         child: AsyncSettings._(
           key: key,
         ),
@@ -35,75 +36,98 @@ class _AsyncSettingsState extends State<AsyncSettings> {
       appBar: AppBar(title: const Text('AsyncSettings')),
       body: BlocBuilder<AsyncSettingsBloc, AsyncSettingsState>(
         buildWhen: (p, c) => !listEquals(p.blueDatas, c.blueDatas),
-        builder: (context, state) => ListView(
+        builder: (context, state) => Column(
           children: [
-            for (final item in state.blueDatas)
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.black12,
-                  border: Border.all(
-                    width: 1,
-                    color: Colors.amberAccent,
-                  ),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('name: ${item.nameTasks}'),
-                    Text('list: ${item.value.join(', ')}'),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              width: 1,
-              color: Colors.green,
-            ),
-          ),
-        ),
-        width: double.infinity,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final item in listBase.entries)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 3, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  border: Border.all(
-                    width: 1,
-                    color: Colors.blue,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(item.key)),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      onPressed: () => bloc.add(
-                        AsyncAddSettingsEvent(
-                          BlueAsyncSettings(
-                            nameTasks: item.key,
-                            value: item.value,
-                          ),
+            Expanded(
+              flex: 2,
+              child: ListView(
+                children: [
+                  for (final item in state.blueDatas)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        border: Border.all(
+                          width: 1,
+                          color: Colors.amberAccent,
                         ),
                       ),
-                      child: const Text('Add'),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('name: ${item.nameTasks}'),
+                                Text('list: [${item.value.join(', ')}]'),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () => bloc.add(
+                              AsyncRemoveSettingsEvent(item.nameTasks),
+                            ),
+                            child: const Text('Remove'),
+                          ),
+                        ],
+                      ),
                     ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      width: 1,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+                width: double.infinity,
+                child: ListView(
+                  children: [
+                    for (final item in listBase.entries)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 3, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          border: Border.all(
+                            width: 1,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(child: Text(item.key)),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                              ),
+                              onPressed: () => bloc.add(
+                                AsyncAddSettingsEvent(
+                                  BlueAsyncSettings(
+                                    nameTasks: item.key,
+                                    value: item.value,
+                                  ),
+                                ),
+                              ),
+                              child: const Text('Add'),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
+            ),
           ],
         ),
       ),

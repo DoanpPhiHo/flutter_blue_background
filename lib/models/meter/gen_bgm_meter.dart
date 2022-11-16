@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:typed_data';
 
 class GenBgmMeter {
@@ -30,21 +29,16 @@ class GenBgmMeter {
     int data1 = 0,
     int data2 = 0,
     int data3 = 0,
-  }) {
-    log(cmd.toString());
-    final List<int> array =
-        MeterCmdUtil.instance.appendOneByteCheckSumToCmd(Uint8List.fromList([
-      81,
-      cmd,
-      data0,
-      data1,
-      data2,
-      data3,
-      163,
-    ]));
-
-    return array;
-  }
+  }) =>
+      MeterCmdUtil.instance.appendOneByteCheckSumToCmd(Uint8List.fromList([
+        81,
+        cmd,
+        data0,
+        data1,
+        data2,
+        data3,
+        163,
+      ]));
 }
 
 class MeterCmdUtil {

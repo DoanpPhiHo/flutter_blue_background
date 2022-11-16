@@ -9,12 +9,26 @@ class AsyncAddSettingsEvent extends AsyncSettingsEvent {
   AsyncAddSettingsEvent(this.model);
 }
 
-class AsyncRemoveSettingsEvent extends AsyncSettingsEvent {}
+class AsyncInitSettingsEvent extends AsyncSettingsEvent {
+  AsyncInitSettingsEvent();
+}
+
+class AsyncRemoveSettingsEvent extends AsyncSettingsEvent {
+  final String nameTask;
+
+  AsyncRemoveSettingsEvent(this.nameTask);
+}
 
 class AsyncUpdateSettingsEvent extends AsyncSettingsEvent {
   final List<BlueAsyncSettings> list;
 
   AsyncUpdateSettingsEvent(this.list);
+}
+
+class AsyncAddItemSettingsEvent extends AsyncSettingsEvent {
+  final BlueAsyncSettings item;
+
+  AsyncAddItemSettingsEvent(this.item);
 }
 
 class AsyncClearSettingsEvent extends AsyncSettingsEvent {}

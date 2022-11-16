@@ -59,13 +59,14 @@ class RestartService : Service() {
         val pendingIntent =
             PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val notification = NotificationCompat.Builder(this, FlutterBlueBackgroundPlugin::channelId.toString())
-            .setSmallIcon(R.drawable.ic_stat_name)
-            .setContentTitle("running service")
-            .setContentText("start")
-            .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .build()
-            startForeground(1, notification)
+        val notification =
+            NotificationCompat.Builder(this, FlutterBlueBackgroundPlugin::channelId.toString())
+                .setSmallIcon(R.drawable.ic_stat_name)
+                .setContentTitle("running service")
+                .setContentText("start")
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .build()
+        startForeground(1, notification)
     }
 }

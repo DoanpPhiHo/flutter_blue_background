@@ -15,6 +15,14 @@ class BlueAsyncSettings {
     required this.value,
     this.status = Status.enable,
   });
+  factory BlueAsyncSettings.fromJson(Map<String, dynamic> json) =>
+      BlueAsyncSettings(
+        nameTasks: json['name'],
+        value: (json['value'] as String)
+            .split(',')
+            .map((e) => int.parse(e))
+            .toList(),
+      );
 
   final Id id;
   @Index(type: IndexType.value, name: 'name_tasks')
@@ -24,4 +32,10 @@ class BlueAsyncSettings {
   @enumerated
   @Index(name: 'status')
   final Status status;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name_tasks': nameTasks,
+        'value': value.join(','),
+      };
 }

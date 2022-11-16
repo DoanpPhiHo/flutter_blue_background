@@ -1,3 +1,4 @@
+import 'package:blue_handle_data/blue_handle_data.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'flutter_blue_background_method_channel.dart';
@@ -43,6 +44,18 @@ abstract class FlutterBlueBackgroundPlatform extends PlatformInterface {
   }
 
   Future<bool> initial(BlueBgModel bgModel) {
+    throw UnimplementedError('writeCharacteristic() has not been implemented.');
+  }
+
+  Future<bool> addTaskAsync(BlueAsyncSettings model) {
+    throw UnimplementedError('writeCharacteristic() has not been implemented.');
+  }
+
+  Future<bool> removeTaskAsync(String model) {
+    throw UnimplementedError('writeCharacteristic() has not been implemented.');
+  }
+
+  Future<List<BlueAsyncSettings>> readListTaskAsync() {
     throw UnimplementedError('writeCharacteristic() has not been implemented.');
   }
 }

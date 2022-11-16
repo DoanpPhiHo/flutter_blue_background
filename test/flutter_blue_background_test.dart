@@ -29,6 +29,21 @@ class MockFlutterBlueBackgroundPlatform
   Future<bool> initial(BlueBgModel bgModel) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<bool> addTaskAsync(BlueAsyncSettings model) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> removeTaskAsync(String model) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<BlueAsyncSettings>> readListTaskAsync() {
+    throw UnimplementedError();
+  }
 }
 
 void main() {

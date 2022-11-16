@@ -1,3 +1,5 @@
+import 'package:blue_handle_data/blue_handle_data.dart';
+
 import 'flutter_blue_background_platform_interface.dart';
 import 'models/blue_bg_model/blue_bg_model.dart';
 
@@ -23,6 +25,18 @@ class FlutterBlueBackground {
 
   Future<bool> initial(BlueBgModel bgModel) {
     return FlutterBlueBackgroundPlatform.instance.initial(bgModel);
+  }
+
+  Future<bool> addTaskAsync(BlueAsyncSettings model) {
+    return FlutterBlueBackgroundPlatform.instance.addTaskAsync(model);
+  }
+
+  Future<bool> removeTaskAsync(String model) {
+    return FlutterBlueBackgroundPlatform.instance.removeTaskAsync(model);
+  }
+
+  Future<List<BlueAsyncSettings>> listTaskAsync() {
+    return FlutterBlueBackgroundPlatform.instance.readListTaskAsync();
   }
 
   Stream<dynamic> subscriptionData() {

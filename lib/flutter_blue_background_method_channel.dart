@@ -1,10 +1,10 @@
-import 'dart:developer';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'flutter_blue_background.dart';
 import 'flutter_blue_background_platform_interface.dart';
-import 'models/blue_bg_model/blue_bg_model.dart';
 
 /// An implementation of [FlutterBlueBackgroundPlatform] that uses method channels.
 class MethodChannelFlutterBlueBackground extends FlutterBlueBackgroundPlatform {
@@ -14,6 +14,8 @@ class MethodChannelFlutterBlueBackground extends FlutterBlueBackgroundPlatform {
 
   static EventChannel eventChanel =
       const EventChannel('flutter_blue_background/write_data_status');
+  static EventChannel eventChanelDb =
+      const EventChannel('flutter_blue_background/db');
 
   @override
   Future<String?> getPlatformVersion() async {
@@ -29,17 +31,36 @@ class MethodChannelFlutterBlueBackground extends FlutterBlueBackgroundPlatform {
 
   @override
   Future<bool> writeCharacteristic(List<int> list) async {
-    log('message flutter writeCharacteristic');
     return await methodChannel.invokeMethod<bool>(
             'writeCharacteristic', list) ??
         false;
   }
 
   @override
+  Future<List<BlueAsyncSettings>> readListTaskAsync() async {
+    final result = await methodChannel.invokeMethod('get_list_task_async');
+    return (jsonDecode(result) as List)
+        .map((e) => BlueAsyncSettings.fromJson(e))
+        .toList();
+  }
+
+  @override
   Future<bool> initial(BlueBgModel bgModel) async {
-    log('message flutter writeCharacteristic');
     return await methodChannel.invokeMethod<bool>(
             'initial', bgModel.toJson()) ??
+        false;
+  }
+
+  @override
+  Future<bool> addTaskAsync(BlueAsyncSettings model) async {
+    return await methodChannel.invokeMethod<bool>(
+            'add_task_async', model.toJson()) ??
+        false;
+  }
+
+  @override
+  Future<bool> removeTaskAsync(String model) async {
+    return await methodChannel.invokeMethod<bool>('remove_task_async', model) ??
         false;
   }
 
