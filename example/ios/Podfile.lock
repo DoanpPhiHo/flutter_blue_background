@@ -1,6 +1,4 @@
 PODS:
-  - blue_async (0.0.1):
-    - Flutter
   - Flutter (1.0.0)
   - flutter_blue_background (0.0.1):
     - Flutter
@@ -8,14 +6,11 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
-  - blue_async (from `.symlinks/plugins/blue_async/ios`)
   - Flutter (from `Flutter`)
   - flutter_blue_background (from `.symlinks/plugins/flutter_blue_background/ios`)
   - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
 
 EXTERNAL SOURCES:
-  blue_async:
-    :path: ".symlinks/plugins/blue_async/ios"
   Flutter:
     :path: Flutter
   flutter_blue_background:
@@ -24,7 +19,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/isar_flutter_libs/ios"
 
 SPEC CHECKSUMS:
-  blue_async: e3eacff0fae52fccda490c827a9fe810c482daf9
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   flutter_blue_background: 7cddf25299edb546438b656036768fed6624768e
   isar_flutter_libs: b69f437aeab9c521821c3f376198c4371fa21073
