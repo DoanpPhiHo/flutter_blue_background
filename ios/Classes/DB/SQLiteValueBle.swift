@@ -1,5 +1,5 @@
 //
-//  SQLiteDB.swift
+//  SQLiteValueBle.swift
 //  flutter_blue_background
 //
 //  Created by HoDoan on 16/11/2022.
@@ -8,11 +8,10 @@
 import Foundation
 import SQLite3
 
-public class DBHelper{
+public class DBBleHelper{
     var db: OpaquePointer?
     var path: String = "flutter_blue_async.sqlite"
-    var tableName = "blue_settings"
-    let turnOffKey = "turn_off"
+    var tableName = "ble_model"
     init(){
         self.db = createDB()
         self.createTable()
@@ -33,7 +32,7 @@ public class DBHelper{
     }
     
     func createTable(){
-        let query = "create table if not exists \(tableName)(id integer primary key autoincrement, name text, value text)"
+        let query = "create table if not exists \(tableName)(id integer primary key autoincrement, time text, value text)"
         var statement: OpaquePointer? = nil
         if sqlite3_prepare_v2(self.db, query, -1, &statement, nil) == SQLITE_OK{
             if sqlite3_step(statement) == SQLITE_DONE{
@@ -47,11 +46,24 @@ public class DBHelper{
         sqlite3_finalize(statement)
     }
     
-    func add(task name : String,taskValue value:String)->Bool{
-        let query = "insert into \(tableName)(name,value) values (?,?)"
+    func getTime()->String{
+        let date = Date()
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minutes = calendar.component(.minute, from: date)
+        let second = calendar.component(.second, from: date)
+        let day = calendar.component(.day, from: date)
+        let month = calendar.component(.month, from: date)
+        let year = calendar.component(.year, from: date)
+        return "\(year)/\(month)/\(day) \(hour):\(minutes):\(second)"
+    }
+    
+    func add(taskValue value:String)->Bool{
+        let query = "insert into \(tableName)(time,value) values (?,?)"
+            
         var statement:OpaquePointer? = nil
         if sqlite3_prepare_v2(db,query, -1,&statement, nil) == SQLITE_OK{
-            sqlite3_bind_text(statement, 1, (name as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(statement, 1, (getTime() as NSString).utf8String, -1, nil)
             sqlite3_bind_text(statement, 2, (value as NSString).utf8String, -1, nil)
             
             if sqlite3_step(statement) == SQLITE_DONE{
@@ -67,18 +79,17 @@ public class DBHelper{
         }
     }
     
-    func remove(task name:String)->Bool{
-        let query = "delete from \(tableName) where name = ?"
+    func removeAll()->Bool{
+        let query = "delete from \(tableName)"
         var statement : OpaquePointer? = nil
         if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK{
-            sqlite3_bind_text(statement, 1, (name as NSString).utf8String, -1, nil)
             if sqlite3_step(statement) == SQLITE_DONE{
                 print("delete success")
-                return true
             }else{
                 print("insert fail")
                 return false
             }
+            return true
         }else{
             print("statement fail")
             return false
@@ -86,14 +97,14 @@ public class DBHelper{
     }
     
     func read() -> String? {
-        var result: [BlueModel] = []
+        var result: [BleModel] = []
         let query = "select * from \(tableName)"
         var statement:OpaquePointer? = nil
         if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK{
             while sqlite3_step(statement) == SQLITE_ROW{
-                let name:String = String(cString: sqlite3_column_text(statement,1))
+                let time:String = String(cString: sqlite3_column_text(statement,1))
                 let value = String(cString: sqlite3_column_text(statement,2))
-                result.append(BlueModel(name: name, value: value))
+                result.append(BleModel(time: time, value: value))
             }
         }
         let data = try? JSONEncoder().encode( result)
@@ -101,39 +112,24 @@ public class DBHelper{
         return String(data: json, encoding: .utf8)
     }
     
-    func readModel() -> [BlueModel] {
-        var result: [BlueModel] = []
+    
+    
+    func readModel() -> [BleModel] {
+        var result: [BleModel] = []
         let query = "select * from \(tableName)"
         var statement:OpaquePointer? = nil
         if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK{
             while sqlite3_step(statement) == SQLITE_ROW{
-                let name:String = String(cString: sqlite3_column_text(statement,1))
+                let time:String = String(cString: sqlite3_column_text(statement,1))
                 let value = String(cString: sqlite3_column_text(statement,2))
-                if(name != turnOffKey){
-                    result.append(BlueModel(name: name, value: value))
-                }
+                result.append(BleModel(time: time, value: value))
             }
         }
         return result
     }
-    
-    func readModelTurnOff() -> BlueModel? {
-        let query = "select * from \(tableName)"
-        var statement:OpaquePointer? = nil
-        if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK{
-            while sqlite3_step(statement) == SQLITE_ROW{
-                let name:String = String(cString: sqlite3_column_text(statement,1))
-                let value = String(cString: sqlite3_column_text(statement,2))
-                if(name == turnOffKey){
-                    return BlueModel(name: name, value: value)
-                }
-            }
-        }
-        return nil
-    }
-    
+
 }
-struct BlueModel: Codable{
-    let name:String
+struct BleModel: Codable{
+    let time:String
     let value:String
 }

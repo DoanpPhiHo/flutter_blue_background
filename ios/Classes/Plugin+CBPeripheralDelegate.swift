@@ -20,6 +20,33 @@ extension SwiftFlutterBlueBackgroundPlugin : CBPeripheralDelegate{
             if char.uuid.uuidString.lowercased() == charUUID.lowercased(){
                 self.char = char
                 self.peripheral?.setNotifyValue(true, for: char)
+                sendListTaskDb()
+            }
+        }
+    }
+    
+    func delay(_ delay:Double, closure:@escaping ()->()) {
+        DispatchQueue.main.asyncAfter(
+            deadline: DispatchTime.now() + Double(Int64(delay * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC), execute: closure)
+    }
+    
+    func sendListTaskDb(){
+        guard let _char = self.char else {return}
+        let listTask:[BlueModel] = db.readModel()
+        
+        self.tastCount = listTask.count
+        
+        for task in listTask {
+            let index:Int = listTask.firstIndex(where: {$0.name == task.name})!
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 +  Double(index)){
+                let sendBytes:[UInt8] = task.value.split(separator: ",").map({v in UInt8(v)!})
+                
+                let uint8Pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: sendBytes.count)
+                uint8Pointer.initialize(from: sendBytes, count: sendBytes.count)
+                let msgData = Data(bytes: uint8Pointer, count: sendBytes.count)
+                
+                self.peripheral?.writeValue( msgData, for: _char, type: .withResponse)
+
             }
         }
     }
@@ -28,5 +55,22 @@ extension SwiftFlutterBlueBackgroundPlugin : CBPeripheralDelegate{
         guard let charValue = characteristic.value else {return}
         let value = [UInt8](charValue)
         eventSink?(value)
+        if self.tastCount == 0{
+            // kill ble
+            let task:BlueModel? = db.readModelTurnOff()
+            let _char = self.char
+            if task != nil && _char != nil {
+                let sendBytes:[UInt8] = task!.value.split(separator: ",").map({v in UInt8(v)!})
+                
+                let uint8Pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: sendBytes.count)
+                uint8Pointer.initialize(from: sendBytes, count: sendBytes.count)
+                let msgData = Data(bytes: uint8Pointer, count: sendBytes.count)
+
+                self.peripheral?.writeValue( msgData, for: _char!, type: .withResponse)
+            }
+            self.tastCount = -1
+        }
+        self.tastCount -= 1
+        let _ = dbBle.add(taskValue: value.map({v in String(v)}).joined(separator: ","))
     }
 }

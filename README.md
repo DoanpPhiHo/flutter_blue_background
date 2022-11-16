@@ -17,13 +17,18 @@ samples, guidance on mobile development, and a full API reference.
 - [read data record new -> old bread](https://github.com/DoanpPhiHo/flutter_blue_background.git)
 - [save db native -> db flutter](https://github.com/DoanpPhiHo/flutter_blue_background.git)
 - [convert code parse data flutter -> native](https://github.com/DoanpPhiHo/flutter_blue_background.git)
+- * parse value skip
 # complete
 - # auto connect ble
+- # write data
+- # get data charactics
 - # list task auto sync (add remove)
+- # save list task db
 # processing
-- [* read list task ](https://github.com/DoanpPhiHo/flutter_blue_background.git)
-- [* read list task -> write value ble](https://github.com/DoanpPhiHo/flutter_blue_background.git)
-- [* listen value](https://github.com/DoanpPhiHo/flutter_blue_background.git)
-- [* parse value](https://github.com/DoanpPhiHo/flutter_blue_background.git)
-- [* save value db](https://github.com/DoanpPhiHo/flutter_blue_background.git)
-- [* turn off ble](https://github.com/DoanpPhiHo/flutter_blue_background.git)
+- * read list task [ios](ok)
+- * read list task -> write value ble [ios](ok)
+- * listen value [ios](ok)
+- * save value db [ios](test)
+- * read list data ble db [ios](test)
+- * clear list data ble db [ios](test)
+- * turn off ble [ios](test)

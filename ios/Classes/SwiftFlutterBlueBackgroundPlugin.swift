@@ -15,6 +15,10 @@ public class SwiftFlutterBlueBackgroundPlugin: NSObject, FlutterPlugin {
     
     var db = DBHelper()
     
+    var tastCount:Int = -1
+    
+    let dbBle = DBBleHelper()
+    
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = SwiftFlutterBlueBackgroundPlugin()
         let eventChannel = FlutterEventChannel(name: "flutter_blue_background/write_data_status", binaryMessenger: registrar.messenger())
@@ -37,9 +41,21 @@ public class SwiftFlutterBlueBackgroundPlugin: NSObject, FlutterPlugin {
         case "add_task_async" : addTaskAsync(call, result)
         case "remove_task_async" : removeTaskAsync(call, result)
         case "get_list_task_async" : listTaskAsync(result)
+        case "get_list_ble_value": listBleValue(result)
+        case "clear_ble_data":clearBleData(result)
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+    
+    private func listBleValue(_ result: @escaping FlutterResult){
+        let resultDb: String? = dbBle.read()
+        result(resultDb ?? "")
+    }
+    
+    private func clearBleData(_ result: @escaping FlutterResult){
+        let resultDb: Bool = dbBle.removeAll()
+        result(resultDb)
     }
     
     private func addTaskAsync(_ call: FlutterMethodCall, _ result: @escaping FlutterResult){
