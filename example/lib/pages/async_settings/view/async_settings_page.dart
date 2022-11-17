@@ -38,8 +38,9 @@ class _AsyncSettingsState extends State<AsyncSettings> {
         buildWhen: (p, c) => !listEquals(p.blueDatas, c.blueDatas),
         builder: (context, state) => Column(
           children: [
+            const Text('Task'),
             Expanded(
-              flex: 2,
+              flex: 1,
               child: ListView(
                 children: [
                   for (final item in state.blueDatas)
@@ -79,6 +80,40 @@ class _AsyncSettingsState extends State<AsyncSettings> {
                 ],
               ),
             ),
+            const Text('ValueBle'),
+            Expanded(
+              flex: 1,
+              child: ListView(
+                children: [
+                  for (final item in state.bleDatas)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        border: Border.all(
+                          width: 1,
+                          color: Colors.amberAccent,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('name: ${item.time.toIso8601String()}'),
+                                Text('list: [${item.value.join(', ')}]'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Text('Add Task'),
             Expanded(
               flex: 1,
               child: Container(

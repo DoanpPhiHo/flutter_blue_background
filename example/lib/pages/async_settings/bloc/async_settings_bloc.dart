@@ -15,8 +15,12 @@ class AsyncSettingsBloc extends Bloc<AsyncSettingsEvent, AsyncSettingsState> {
     //       AsyncUpdateSettingsEvent(list),
     //     ));
     on<AsyncInitSettingsEvent>(
-      (event, emit) async => emit(state.copyWith(
-          blueDatas: await FlutterBlueBackground.instance.listTaskAsync())),
+      (event, emit) async => emit(
+        state.copyWith(
+          blueDatas: await FlutterBlueBackground.instance.listTaskAsync(),
+          bleDatas: await FlutterBlueBackground.instance.listBleData(),
+        ),
+      ),
     );
     on<AsyncAddSettingsEvent>((event, emit) async {
       // await _asyncSettings.add(event.model);
