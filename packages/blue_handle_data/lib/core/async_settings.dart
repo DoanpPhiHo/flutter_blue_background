@@ -18,8 +18,8 @@ class AsyncSettingsYmlp extends IAsyncSettings {
   late Future<Isar?> db;
   @override
   Future<void> add(BlueAsyncSettings value) async {
-    final isar = await db;
-    isar?.writeTxnSync<int>(() => isar.blueAsyncSettings.putSync(value));
+    // final isar = await db;
+    // isar?.writeTxnSync<int>(() => isar.blueAsyncSettings.putSync(value));
   }
 
   @override
@@ -31,7 +31,8 @@ class AsyncSettingsYmlp extends IAsyncSettings {
   @override
   Future<Isar?> openDb() async {
     if (Isar.instanceNames.isEmpty) {
-      return Isar.open([BlueAsyncSettingsSchema]);
+      // return Isar.open([BlueAsyncSettingsSchema]);
+      return null;
     } else {
       return Future.value(Isar.getInstance());
     }
@@ -39,21 +40,23 @@ class AsyncSettingsYmlp extends IAsyncSettings {
 
   @override
   Future<BlueAsyncSettings?> get(int id) async {
-    final isar = await db;
-    return await isar?.blueAsyncSettings.filter().idEqualTo(id).findFirst();
+    // final isar = await db;
+    return null;
+    // return await isar?.blueAsyncSettings.filter().idEqualTo(id).findFirst();
   }
 
   @override
   Future<List<BlueAsyncSettings>?> gets() async {
-    final isar = await db;
-    return isar?.blueAsyncSettings.where().findAll();
+    return null;
+    // final isar = await db;
+    // return isar?.blueAsyncSettings.where().findAll();
   }
 
   @override
   Stream<List<BlueAsyncSettings>>? listenToBlueAsyncSettings() async* {
     final isar = await db;
     if (isar != null) {
-      yield* isar.blueAsyncSettings.where().watch(fireImmediately: true);
+      // yield* isar.blueAsyncSettings.where().watch(fireImmediately: true);
     }
   }
 }

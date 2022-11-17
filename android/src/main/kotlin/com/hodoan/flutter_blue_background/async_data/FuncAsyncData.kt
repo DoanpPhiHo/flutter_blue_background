@@ -8,11 +8,9 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat.startActivity
-import com.hodoan.flutter_blue_background.db_helper.BlueAsync
 import com.hodoan.flutter_blue_background.db_helper.DbBLueAsyncSettingsHelper
-import com.hodoan.flutter_blue_background.db_helper.DbBleValueHelper
 import java.util.*
 
 
@@ -21,11 +19,9 @@ class FuncAsyncData {
         context?.let {
             val db = DbBLueAsyncSettingsHelper(it, null)
             val resultDb = db.turnOff()
-            val list = ArrayList<BlueAsync>()
-            if (resultDb == null) return
-            list.add(db.cursorToModel(resultDb))
-            for (item in list) {
-                val listInt: List<Byte> = item.value.split(",") as List<Byte>
+            for (item in resultDb) {
+                val listInt: List<Byte> =
+                    item.value.split(",").map { v -> v.toInt() }.map { v -> v.toByte() }
                 val data = byteArrayOf(
                     listInt[0],
                     listInt[1],
@@ -76,8 +72,8 @@ class FuncAsyncData {
 
     fun savaDataDB(context: Context?, value: List<Int>) {
         context?.let {
-            val db = DbBleValueHelper(it, null)
-            db.add(value.joinToString { "," })
+            val db = DbBLueAsyncSettingsHelper(it, null)
+            db.add(value.joinToString())
         }
     }
 
@@ -87,17 +83,15 @@ class FuncAsyncData {
         baseUUID: String?,
         charUUID: String?
     ) {
+        Log.e(
+            FuncAsyncData::class.simpleName,
+            "autoWriteValue: ${context != null} ${gatt != null}",
+        )
         context?.let {
             val db = DbBLueAsyncSettingsHelper(it, null)
             val resultDb = db.argsNoTurnOff()
-            val list = ArrayList<BlueAsync>()
-            if (resultDb == null) return
-            list.add(db.cursorToModel(resultDb))
-            while (resultDb.moveToNext()) {
-                list.add(db.cursorToModel(resultDb))
-            }
-            for (item in list) {
-                val listInt: List<Byte> = item.value.split(",") as List<Byte>
+            for (item in resultDb) {
+                val listInt: List<Byte> = item.value.split(",").map { v -> v.toInt() }.map { v -> v.toByte() }
                 val data = byteArrayOf(
                     listInt[0],
                     listInt[1],

@@ -1,6 +1,5 @@
 package com.hodoan.flutter_blue_background
 
-import android.annotation.SuppressLint
 import android.app.*
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -16,7 +15,6 @@ import com.hodoan.flutter_blue_background.convert.UuidConvert
 import com.hodoan.flutter_blue_background.db_helper.BleValue
 import com.hodoan.flutter_blue_background.db_helper.BlueAsync
 import com.hodoan.flutter_blue_background.db_helper.DbBLueAsyncSettingsHelper
-import com.hodoan.flutter_blue_background.db_helper.DbBleValueHelper
 import com.hodoan.flutter_blue_background.services.BluetoothReceive
 import com.hodoan.flutter_blue_background.services.RestartService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -78,17 +76,10 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
 
     private fun listBleData(result: Result) {
         context?.let {
-            val db = DbBleValueHelper(it, null)
-            val resultDb = db.args() ?: return
-            val check = resultDb.moveToFirst()
-            if (!check) return
-            val list = ArrayList<BleValue>()
-            list.add(db.cursorToModel(resultDb))
-            while (resultDb.moveToNext()) {
-                list.add(db.cursorToModel(resultDb))
-            }
+            val db = DbBLueAsyncSettingsHelper(it, null)
+            val resultDb = db.argsBle()
             val gson = Gson()
-            result.success(gson.toJson(list))
+            result.success(gson.toJson(resultDb))
             return
         }
         result.success(null)
@@ -96,7 +87,7 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
 
     private fun clearBleData(result: Result) {
         context?.let {
-            val db = DbBleValueHelper(it, null)
+            val db = DbBLueAsyncSettingsHelper(it, null)
             val resultDb = db.removeAll()
             result.success(resultDb)
             return
@@ -107,16 +98,9 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
     private fun listTaskAsync(result: Result) {
         context?.let {
             val db = DbBLueAsyncSettingsHelper(it, null)
-            val resultDb = db.args() ?: return
-            if (resultDb.moveToFirst()) {
-                val list = ArrayList<BlueAsync>()
-                list.add(db.cursorToModel(resultDb))
-                while (resultDb.moveToNext()) {
-                    list.add(db.cursorToModel(resultDb))
-                }
-                val gson = Gson()
-                result.success(gson.toJson(list))
-            }
+            val resultDb = db.args()
+            val gson = Gson()
+            result.success(gson.toJson(resultDb))
             return
         }
         result.success(null)
@@ -137,7 +121,10 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         context?.let {
             val db = DbBLueAsyncSettingsHelper(it, null)
             val data = call.arguments as Map<*, *>
-            val resultDb = db.add(data["name_tasks"] as String, data["value"] as String)
+            val taskData = (data["value"] as ByteArray).map { v -> v.toInt() }.joinToString()
+            Log.e(FlutterBlueBackgroundPlugin::class.simpleName, "addTaskAsync: $taskData", )
+            val resultDb = db.add(
+                data["name_tasks"] as String,taskData)
             result.success(resultDb)
             return
         }
@@ -151,7 +138,7 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         baseUUID = data["baseUUID"] as String
         charUUID = data["charUUID"] as String
         sharedPreferences?.edit()?.apply {
-            putString(serviceUUIDStr, serviceUuids?.map { it.toString() }?.joinToString { "," })
+            putString(serviceUUIDStr, serviceUuids?.joinToString { it.toString() })
             putString(baseUUIDStr, baseUUID)
             putString(charUUIDStr, charUUID)
         }?.apply()
@@ -159,19 +146,9 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
     }
 
     private fun writeCharacteristic(arguments: Any?, result: Result) {
-        val listInt: List<Byte> = arguments as List<Byte>
-        val data = byteArrayOf(
-            listInt[0],
-            listInt[1],
-            listInt[2],
-            listInt[3],
-            listInt[4],
-            listInt[5],
-            listInt[6],
-            listInt[7],
-        )
+        val listInt = arguments as ByteArray
         Log.d("writeCharacteristic", "writeCharacteristic: ")
-        bluetoothReceive?.writeCharacteristic(data)
+        bluetoothReceive?.writeCharacteristic(listInt)
         result.success(true)
     }
 

@@ -60,7 +60,7 @@ public class SwiftFlutterBlueBackgroundPlugin: NSObject, FlutterPlugin {
     
     private func addTaskAsync(_ call: FlutterMethodCall, _ result: @escaping FlutterResult){
         guard let data: Dictionary<String, Any> = call.arguments as? Dictionary<String,Any> else {return}
-        let resultDb: Bool = db.add(task: data["name_tasks"] as! String, taskValue: data["value"] as! String)
+        let resultDb: Bool = db.add(task: data["name_tasks"] as! String, taskValue: data["value"] as! [UInt8])
         result(resultDb)
     }
     

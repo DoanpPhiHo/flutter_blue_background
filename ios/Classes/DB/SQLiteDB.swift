@@ -47,12 +47,13 @@ public class DBHelper{
         sqlite3_finalize(statement)
     }
     
-    func add(task name : String,taskValue value:String)->Bool{
+    func add(task name : String,taskValue value:[UInt8])->Bool{
         let query = "insert into \(tableName)(name,value) values (?,?)"
+        let _value = value.map({v in String(v)}).joined(separator:",")
         var statement:OpaquePointer? = nil
         if sqlite3_prepare_v2(db,query, -1,&statement, nil) == SQLITE_OK{
             sqlite3_bind_text(statement, 1, (name as NSString).utf8String, -1, nil)
-            sqlite3_bind_text(statement, 2, (value as NSString).utf8String, -1, nil)
+            sqlite3_bind_text(statement, 2, (_value as NSString).utf8String, -1, nil)
             
             if sqlite3_step(statement) == SQLITE_DONE{
                 print("insert success")
@@ -92,7 +93,7 @@ public class DBHelper{
         if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK{
             while sqlite3_step(statement) == SQLITE_ROW{
                 let name:String = String(cString: sqlite3_column_text(statement,1))
-                let value = String(cString: sqlite3_column_text(statement,2))
+                let value:[UInt8] = String(cString: sqlite3_column_text(statement,2)).split(separator: ",").map({v in UInt8(v)!})
                 result.append(BlueModel(name: name, value: value))
             }
         }
@@ -110,7 +111,7 @@ public class DBHelper{
                 let name:String = String(cString: sqlite3_column_text(statement,1))
                 let value = String(cString: sqlite3_column_text(statement,2))
                 if(name != turnOffKey){
-                    result.append(BlueModel(name: name, value: value))
+                    result.append(BlueModel(name: name, value: value.split(separator: ",").map({v in UInt8(v)!})))
                 }
             }
         }
@@ -125,7 +126,7 @@ public class DBHelper{
                 let name:String = String(cString: sqlite3_column_text(statement,1))
                 let value = String(cString: sqlite3_column_text(statement,2))
                 if(name == turnOffKey){
-                    return BlueModel(name: name, value: value)
+                    return BlueModel(name: name, value: value.split(separator: ",").map({v in UInt8(v)!}))
                 }
             }
         }
@@ -135,5 +136,5 @@ public class DBHelper{
 }
 struct BlueModel: Codable{
     let name:String
-    let value:String
+    let value:[UInt8]
 }

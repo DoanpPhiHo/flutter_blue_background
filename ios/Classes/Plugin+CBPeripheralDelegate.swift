@@ -39,7 +39,7 @@ extension SwiftFlutterBlueBackgroundPlugin : CBPeripheralDelegate{
         for task in listTask {
             let index:Int = listTask.firstIndex(where: {$0.name == task.name})!
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 +  Double(index)){
-                let sendBytes:[UInt8] = task.value.split(separator: ",").map({v in UInt8(v)!})
+                let sendBytes:[UInt8] = task.value
                 
                 let uint8Pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: sendBytes.count)
                 uint8Pointer.initialize(from: sendBytes, count: sendBytes.count)
@@ -60,7 +60,7 @@ extension SwiftFlutterBlueBackgroundPlugin : CBPeripheralDelegate{
             let task:BlueModel? = db.readModelTurnOff()
             let _char = self.char
             if task != nil && _char != nil {
-                let sendBytes:[UInt8] = task!.value.split(separator: ",").map({v in UInt8(v)!})
+                let sendBytes:[UInt8] = task!.value
                 
                 let uint8Pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: sendBytes.count)
                 uint8Pointer.initialize(from: sendBytes, count: sendBytes.count)

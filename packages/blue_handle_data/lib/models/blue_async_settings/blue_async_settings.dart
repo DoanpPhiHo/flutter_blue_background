@@ -1,16 +1,17 @@
-import 'package:isar/isar.dart';
+import 'package:flutter/foundation.dart';
+// import 'package:isar/isar.dart';
 
-part 'blue_async_settings.g.dart';
+// part 'blue_async_settings.g.dart';
 
 enum Status {
   enable,
   disable,
 }
 
-@collection
+// @collection
 class BlueAsyncSettings {
   BlueAsyncSettings({
-    this.id = Isar.autoIncrement,
+    this.id = 0, //Isar.autoIncrement,
     required this.nameTasks,
     required this.value,
     this.status = Status.enable,
@@ -18,24 +19,24 @@ class BlueAsyncSettings {
   factory BlueAsyncSettings.fromJson(Map<String, dynamic> json) =>
       BlueAsyncSettings(
         nameTasks: json['name'],
-        value: (json['value'] as String)
+        value: Uint8List.fromList((json['value'] as String)
             .split(',')
             .map((e) => int.parse(e))
-            .toList(),
+            .toList()),
       );
 
-  final Id id;
-  @Index(type: IndexType.value, name: 'name_tasks')
+  final int id; //Id id;
+  // @Index(type: IndexType.value, name: 'name_tasks')
   final String nameTasks;
-  @Index(name: 'value')
-  final List<int> value;
-  @enumerated
-  @Index(name: 'status')
+  // @Index(name: 'value')
+  final Uint8List value;
+  // @enumerated
+  // @Index(name: 'status')
   final Status status;
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'name_tasks': nameTasks,
-        'value': value.join(','),
+        'value': value,
       };
 }

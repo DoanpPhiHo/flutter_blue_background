@@ -146,11 +146,16 @@ class BluetoothReceive(
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     val context = context ?: return
-                    if (ActivityCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.BLUETOOTH_CONNECT
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        if (ActivityCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.BLUETOOTH_CONNECT
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            gatt.discoverServices()
+                            FuncAsyncData().autoWriteValue(context, gatt, baseUUID, charUUID)
+                        }
+                    } else {
                         gatt.discoverServices()
                         FuncAsyncData().autoWriteValue(context, gatt, baseUUID, charUUID)
                     }
@@ -188,7 +193,7 @@ class BluetoothReceive(
             activity?.runOnUiThread {
                 sink?.success(result)
             }
-            FuncAsyncData().savaDataDB(context, result)
+            FuncAsyncData().savaDataDB(context, characteristic.value.map { it.toInt() })
             if (taskCount == 0) {
                 FuncAsyncData().turnOffBle(context, gatt, baseUUID, charUUID)
                 taskCount = -1
@@ -241,10 +246,6 @@ class BluetoothReceive(
             super.onScanResult(callbackType, result)
             val device = result?.device ?: return
             val context = context ?: return
-            Log.d(
-                tag,
-                "onScanResult: ${device.address} ${device.name} ${Build.VERSION.SDK_INT >= Build.VERSION_CODES.S}"
-            )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (ActivityCompat.checkSelfPermission(
                         context,
@@ -287,7 +288,7 @@ class BluetoothReceive(
                 settingsBlue()
                 return
             }
-            if(!FuncAsyncData().isLocationEnabled(ctx)){
+            if (!FuncAsyncData().isLocationEnabled(ctx)) {
                 FuncAsyncData().enableLocation(ctx)
             }
             scanner = adapter.bluetoothLeScanner
@@ -295,7 +296,6 @@ class BluetoothReceive(
                 ?.map {
                     ScanFilter.Builder().setServiceUuid(ParcelUuid(it)).build()
                 }?.toList() ?: ArrayList()
-            Log.d(BluetoothReceive::class.java.simpleName, "startScan: ${this.serviceUuids?.size}")
             val scanSettings: ScanSettings =
                 ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
             scanner!!.startScan(arrFilter, scanSettings, scanCallback)

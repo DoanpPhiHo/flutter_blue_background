@@ -150,7 +150,7 @@ class _AsyncSettingsState extends State<AsyncSettings> {
                                 AsyncAddSettingsEvent(
                                   BlueAsyncSettings(
                                     nameTasks: item.key,
-                                    value: item.value,
+                                    value: Uint8List.fromList(item.value),
                                   ),
                                 ),
                               ),
