@@ -21,6 +21,7 @@ import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.app.NotificationCompat
 import com.hodoan.flutter_blue_background.FlutterBlueBackgroundPlugin
 import com.hodoan.flutter_blue_background.R
+import com.hodoan.flutter_blue_background.async_data.FuncAsyncData
 import com.hodoan.flutter_blue_background.interfaces.IActionBlueLe
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
@@ -53,6 +54,8 @@ class BluetoothReceive(
 
     private val notificationId: Int = 1998
     private val contentTitle = "Blue Background Service"
+
+    private var taskCount = -1
 
     init {
         eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
@@ -143,6 +146,7 @@ class BluetoothReceive(
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     gatt.discoverServices()
+                        FuncAsyncData().autoWriteValue(context,gatt,baseUUID,charUUID)
                 } else {
                     Log.w(tag, "onConnectionStateChange received: $status")
                 }
@@ -150,6 +154,7 @@ class BluetoothReceive(
 
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {}
 
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onCharacteristicRead(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic,
@@ -160,6 +165,7 @@ class BluetoothReceive(
                 }
             }
 
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onCharacteristicChanged(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic
@@ -169,6 +175,7 @@ class BluetoothReceive(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
         if (UUID.fromString(charUUID) == characteristic.uuid) {
             val result = characteristic.value.map {
@@ -176,6 +183,11 @@ class BluetoothReceive(
             }
             activity?.runOnUiThread {
                 sink?.success(result)
+            }
+            FuncAsyncData().savaDataDB(context, result)
+            if (taskCount == 0) {
+                FuncAsyncData().turnOffBle(context, gatt, baseUUID, charUUID)
+                taskCount = -1
             }
         }
     }
@@ -218,8 +230,9 @@ class BluetoothReceive(
 
     @SuppressWarnings("MissingPermission")
     override fun startScan() {
-        if(context?.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            !=PackageManager.PERMISSION_GRANTED){
+        if (context?.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             requestLocationPermission()
             return
         }
@@ -256,18 +269,18 @@ class BluetoothReceive(
                 }
             }
         }
-            return true
+        return true
     }
 
-        private fun requestLocationPermission() {
-            activity?.let {
-                ActivityCompat.requestPermissions(
-                    it,
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                    ),
-                    99
-                )
-            }
+    private fun requestLocationPermission() {
+        activity?.let {
+            ActivityCompat.requestPermissions(
+                it,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                ),
+                99
+            )
         }
     }
+}

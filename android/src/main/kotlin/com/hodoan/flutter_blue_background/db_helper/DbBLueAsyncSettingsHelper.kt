@@ -7,7 +7,6 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
-import org.json.JSONObject
 
 class DbBLueAsyncSettingsHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     SQLiteOpenHelper(
@@ -24,15 +23,6 @@ class DbBLueAsyncSettingsHelper(context: Context, factory: SQLiteDatabase.Cursor
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
         db?.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
         onCreate(db)
-    }
-
-    @SuppressLint("Range")
-    fun cursorToString(cursor: Cursor): String {
-        val result = mutableMapOf(
-            Pair("name_tasks", cursor.getString(cursor.getColumnIndex(NAME_COl))),
-            Pair("value", cursor.getString(cursor.getColumnIndex(VALUE_COL)))
-        )
-        return JSONObject(result as Map<*, *>).toString()
     }
 
     @SuppressLint("Range")
@@ -78,6 +68,16 @@ class DbBLueAsyncSettingsHelper(context: Context, factory: SQLiteDatabase.Cursor
         return db?.rawQuery("SELECT * FROM $TABLE_NAME", null)
     }
 
+    fun argsNoTurnOff(): Cursor? {
+        val db = this.readableDatabase
+        return db?.rawQuery("SELECT * FROM $TABLE_NAME WHERE name != ?", arrayOf(TURN_OFF))
+    }
+
+    fun turnOff(): Cursor? {
+        val db = this.readableDatabase
+        return db?.rawQuery("SELECT * FROM $TABLE_NAME WHERE name = ?", arrayOf(TURN_OFF))
+    }
+
     companion object {
         private const val DATABASE_NAME = "BLUE_ASYNC_SETTINGS"
 
@@ -86,6 +86,8 @@ class DbBLueAsyncSettingsHelper(context: Context, factory: SQLiteDatabase.Cursor
         const val TABLE_NAME = "blue_settings"
 
         const val ID_COL = "id"
+
+        const val TURN_OFF = "turn_off"
 
         const val NAME_COl = "name"
 

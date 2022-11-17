@@ -58,4 +58,12 @@ abstract class FlutterBlueBackgroundPlatform extends PlatformInterface {
   Future<List<BlueAsyncSettings>> readListTaskAsync() {
     throw UnimplementedError('writeCharacteristic() has not been implemented.');
   }
+
+  Future<List<BleValueDb>> listBleData() {
+    throw UnimplementedError('writeCharacteristic() has not been implemented.');
+  }
+
+  Future<bool> clearBleData() {
+    throw UnimplementedError('writeCharacteristic() has not been implemented.');
+  }
 }

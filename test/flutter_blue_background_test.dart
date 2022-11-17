@@ -44,6 +44,16 @@ class MockFlutterBlueBackgroundPlatform
   Future<List<BlueAsyncSettings>> readListTaskAsync() {
     throw UnimplementedError();
   }
+
+  @override
+  Future<bool> clearBleData() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<BleValueDb>> listBleData() {
+    throw UnimplementedError();
+  }
 }
 
 void main() {

@@ -68,4 +68,17 @@ class MethodChannelFlutterBlueBackground extends FlutterBlueBackgroundPlatform {
   Stream<dynamic> subscriptionData() async* {
     yield* eventChanel.receiveBroadcastStream();
   }
+
+  @override
+  Future<List<BleValueDb>> listBleData() async {
+    final result = await methodChannel.invokeMethod('get_list_ble_value');
+    return (jsonDecode(result) as List)
+        .map((e) => BleValueDb.fromJson(e))
+        .toList();
+  }
+
+  @override
+  Future<bool> clearBleData() async {
+    return await methodChannel.invokeMethod<bool>('clear_ble_data') ?? false;
+  }
 }

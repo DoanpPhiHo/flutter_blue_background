@@ -39,6 +39,14 @@ class FlutterBlueBackground {
     return FlutterBlueBackgroundPlatform.instance.readListTaskAsync();
   }
 
+  Future<List<BleValueDb>> listBleData() {
+    return FlutterBlueBackgroundPlatform.instance.listBleData();
+  }
+
+  Future<bool> clearBleData() {
+    return FlutterBlueBackgroundPlatform.instance.clearBleData();
+  }
+
   Stream<dynamic> subscriptionData() {
     return FlutterBlueBackgroundPlatform.instance.subscriptionData();
   }

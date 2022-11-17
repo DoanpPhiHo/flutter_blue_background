@@ -13,8 +13,10 @@ import android.os.Build
 import android.util.Log
 import com.google.gson.Gson
 import com.hodoan.flutter_blue_background.convert.UuidConvert
+import com.hodoan.flutter_blue_background.db_helper.BleValue
 import com.hodoan.flutter_blue_background.db_helper.BlueAsync
 import com.hodoan.flutter_blue_background.db_helper.DbBLueAsyncSettingsHelper
+import com.hodoan.flutter_blue_background.db_helper.DbBleValueHelper
 import com.hodoan.flutter_blue_background.services.BluetoothReceive
 import com.hodoan.flutter_blue_background.services.RestartService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -67,9 +69,39 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
             // db
             "add_task_async" -> addTaskAsync(call, result)
             "remove_task_async" -> removeTaskAsync(call, result)
+            "clear_ble_data" -> clearBleData(result)
             "get_list_task_async" -> listTaskAsync(result)
+            "get_list_ble_value" -> listBleData(result)
             else -> result.notImplemented()
         }
+    }
+
+    private fun listBleData(result: Result) {
+        context?.let {
+            val db = DbBleValueHelper(it, null)
+            val resultDb = db.args() ?: return
+            val check = resultDb.moveToFirst()
+            if (!check) return
+            val list = ArrayList<BleValue>()
+            list.add(db.cursorToModel(resultDb))
+            while (resultDb.moveToNext()) {
+                list.add(db.cursorToModel(resultDb))
+            }
+            val gson = Gson()
+            result.success(gson.toJson(list))
+            return
+        }
+        result.success(null)
+    }
+
+    private fun clearBleData(result: Result) {
+        context?.let {
+            val db = DbBleValueHelper(it, null)
+            val resultDb = db.removeAll()
+            result.success(resultDb)
+            return
+        }
+        result.success(false)
     }
 
     @SuppressLint("Range")

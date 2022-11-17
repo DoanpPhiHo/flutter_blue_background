@@ -25,10 +25,10 @@ samples, guidance on mobile development, and a full API reference.
 - # list task auto sync (add remove)
 - # save list task db
 # processing
-- * read list task [ios](ok)
-- * read list task -> write value ble [ios](ok)
-- * listen value [ios](ok)
-- * save value db [ios](test)
-- * read list data ble db [ios](test)
-- * clear list data ble db [ios](test)
-- * turn off ble [ios](test)
+- * read list task [ios,android](ok,test)
+- * read list task -> write value ble [ios,adroid](ok,test)
+- * listen value [ios,android](ok)
+- * save value db [ios,android](test)
+- * read list data ble db [ios,android](test)
+- * clear list data ble db [ios,android](test)
+- * turn off ble [ios,android](test)

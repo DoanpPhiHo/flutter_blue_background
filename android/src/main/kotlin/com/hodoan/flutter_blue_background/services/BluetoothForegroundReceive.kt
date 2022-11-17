@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.hodoan.flutter_blue_background.FlutterBlueBackgroundPlugin
 import com.hodoan.flutter_blue_background.R
+import com.hodoan.flutter_blue_background.async_data.FuncAsyncData
 import com.hodoan.flutter_blue_background.interfaces.IActionBlueLe
 import java.util.*
 
@@ -34,6 +35,8 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
     private var charUUID: String? = null
     private var baseUUID: String? = null
     private var serviceUuids: List<String>? = null
+
+    private var taskCount = -1
 
     private fun notification(text: String) {
         context?.let {
@@ -153,6 +156,7 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     gatt.discoverServices()
+                    FuncAsyncData().autoWriteValue(context,gatt,baseUUID,charUUID)
                 } else {
                     Log.w(tag, "onConnectionStateChange received: $status")
                 }
@@ -160,6 +164,7 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
 
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {}
 
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onCharacteristicRead(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic,
@@ -170,6 +175,7 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
                 }
             }
 
+            @RequiresApi(Build.VERSION_CODES.O)
             override fun onCharacteristicChanged(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic
@@ -179,12 +185,17 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
         if (UUID.fromString(charUUID) == characteristic.uuid) {
             val result = characteristic.value.map {
                 java.lang.Byte.toUnsignedInt(it).toString(radix = 10).padStart(2, '0').toInt()
             }
-            Log.d("broadcastUpdate", "broadcastUpdate: $result")
+            FuncAsyncData().savaDataDB(context, result)
+            if (taskCount == 0) {
+                FuncAsyncData().turnOffBle(context, gatt, baseUUID, charUUID)
+                taskCount = -1
+            }
         }
     }
 
