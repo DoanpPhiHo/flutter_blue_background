@@ -19,6 +19,7 @@ import androidx.core.app.NotificationCompat
 import com.hodoan.flutter_blue_background.FlutterBlueBackgroundPlugin
 import com.hodoan.flutter_blue_background.R
 import com.hodoan.flutter_blue_background.async_data.FuncAsyncData
+import com.hodoan.flutter_blue_background.db_helper.DbBLueAsyncSettingsHelper
 import com.hodoan.flutter_blue_background.interfaces.IActionBlueLe
 import java.util.*
 
@@ -181,11 +182,19 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             gatt.discoverServices()
-                            FuncAsyncData().autoWriteValue(context, gatt, baseUUID, charUUID)
+                            Timer().schedule(object : TimerTask() {
+                                override fun run() {
+                                    autoWriteValue()
+                                }
+                            }, 2000)
                         }
                     } else {
                         gatt.discoverServices()
-                        FuncAsyncData().autoWriteValue(context, gatt, baseUUID, charUUID)
+                        Timer().schedule(object : TimerTask() {
+                            override fun run() {
+                                autoWriteValue()
+                            }
+                        }, 2000)
                     }
                 } else {
                     Log.w(tag, "onConnectionStateChange received: $status")
@@ -213,12 +222,40 @@ class BluetoothForegroundReceive : BroadcastReceiver(),
         }
     }
 
+    fun autoWriteValue() {
+        Log.e(
+            FuncAsyncData::class.simpleName,
+            "autoWriteValue: ${context != null} ${gatt != null}",
+        )
+        context?.let {
+            val db = DbBLueAsyncSettingsHelper(it, null)
+            val resultDb = db.argsNoTurnOff()
+            taskCount = resultDb.size
+            for (item in resultDb) {
+                val listInt: List<Byte> =
+                    item.value.split(",").map { v -> v.trim().toInt() }.map { v -> v.toByte() }
+                val data = byteArrayOf(
+                    listInt[0],
+                    listInt[1],
+                    listInt[2],
+                    listInt[3],
+                    listInt[4],
+                    listInt[5],
+                    listInt[6],
+                    listInt[7],
+                )
+                writeCharacteristic(data)
+            }
+        }
+    }
+
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
         if (UUID.fromString(charUUID) == characteristic.uuid) {
             val result = characteristic.value.map {
                 java.lang.Byte.toUnsignedInt(it).toString(radix = 10).padStart(2, '0').toInt()
             }
-            FuncAsyncData().savaDataDB(context, result)
+            FuncAsyncData().savaDataDB(context, characteristic.value)
+            taskCount -= 1
             if (taskCount == 0) {
                 FuncAsyncData().turnOffBle(context, gatt, baseUUID, charUUID)
                 taskCount = -1

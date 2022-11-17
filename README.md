@@ -17,6 +17,9 @@ For help getting started with Flutter development, view the
 [online documentation](https://flutter.dev/docs), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
+#### *** proplem
+- list task not retun all data
+
 # waiting
 - [read data record new -> old bread](https://github.com/DoanpPhiHo/flutter_blue_background.git)
 - [save db native -> db flutter](https://github.com/DoanpPhiHo/flutter_blue_background.git)
@@ -30,18 +33,16 @@ samples, guidance on mobile development, and a full API reference.
 - # save list task db
 - # listen value
 # processing
-- * read list task [ios,android](test)
-- * read list task -> write value ble [ios,adroid](test)
-- * save value db [ios,android](test)
-- * read list data ble db [ios,android](test)
-- * clear list data ble db [ios,android](test)
-- * turn off ble [ios,android](test)
+- * read list task [ios](test)
+- * read list task -> write value ble [ios](test)
+- * save value db [ios](test)
+- * read list data ble db [ios](test)
+- * clear list data ble db [ios](test)
+- * turn off ble [ios](test)
 
-## Usage
+## Usage `FlutterBlueBackground`
 
-using `FlutterBlueBackground`
-
-### counter_cubit.dart
+# init plugins
 
 ```dart
 ///init main app
@@ -88,7 +89,7 @@ FlutterBlueBackground.instance.initial(
 FlutterBlueBackground.instance.startBackgroundBluetooth()
 ```
 
-# listen write value return data ble
+# listen write value return data ble *`not support foreground service`
 
 ```dart
 FlutterBlueBackground.instance.subscriptionData().listen((event) {

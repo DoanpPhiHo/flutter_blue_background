@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.hodoan.flutter_blue_background.db_helper.DbBLueAsyncSettingsHelper
 import java.util.*
@@ -70,44 +69,12 @@ class FuncAsyncData {
         }
     }
 
-    fun savaDataDB(context: Context?, value: List<Int>) {
+    fun savaDataDB(context: Context?, value: ByteArray) {
         context?.let {
             val db = DbBLueAsyncSettingsHelper(it, null)
-            db.add(value.joinToString())
-        }
-    }
-
-    fun autoWriteValue(
-        context: Context?,
-        gatt: BluetoothGatt?,
-        baseUUID: String?,
-        charUUID: String?
-    ) {
-        Log.e(
-            FuncAsyncData::class.simpleName,
-            "autoWriteValue: ${context != null} ${gatt != null}",
-        )
-        context?.let {
-            val db = DbBLueAsyncSettingsHelper(it, null)
-            val resultDb = db.argsNoTurnOff()
-            for (item in resultDb) {
-                val listInt: List<Byte> = item.value.split(",").map { v -> v.toInt() }.map { v -> v.toByte() }
-                val data = byteArrayOf(
-                    listInt[0],
-                    listInt[1],
-                    listInt[2],
-                    listInt[3],
-                    listInt[4],
-                    listInt[5],
-                    listInt[6],
-                    listInt[7],
-                )
-                writeData(
-                    context,
-                    gatt, baseUUID ?: "00001523-1212-efde-1523-785feabcd123",
-                    charUUID ?: "00001524-1212-efde-1523-785feabcd123", data
-                )
-            }
+            db.add(value.map {v->
+                java.lang.Byte.toUnsignedInt(v).toString(radix = 10).padStart(2, '0').toInt()
+            }.joinToString())
         }
     }
 
