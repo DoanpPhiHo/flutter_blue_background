@@ -24,10 +24,10 @@ samples, guidance on mobile development, and a full API reference.
 - # get data charactics
 - # list task auto sync (add remove)
 - # save list task db
+- # listen value
 # processing
-- * read list task [ios,android](ok,test)
-- * read list task -> write value ble [ios,adroid](ok,test)
-- * listen value [ios,android](ok)
+- * read list task [ios,android](test)
+- * read list task -> write value ble [ios,adroid](test)
 - * save value db [ios,android](test)
 - * read list data ble db [ios,android](test)
 - * clear list data ble db [ios,android](test)

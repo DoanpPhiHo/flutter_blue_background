@@ -15,7 +15,6 @@ import android.os.Bundle
 import android.os.ParcelUuid
 import android.provider.ContactsContract
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.app.NotificationCompat
@@ -28,7 +27,6 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.PluginRegistry
 import java.util.*
-
 
 class BluetoothReceive(
     private val context: Context?,
@@ -89,8 +87,6 @@ class BluetoothReceive(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
-    @SuppressWarnings("MissingPermission")
     override fun onReceive(context: Context?, intent: Intent?) {
         when (val action: String? = intent?.action) {
             BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
@@ -110,6 +106,11 @@ class BluetoothReceive(
                         gatt = null
                         startScan()
                     }
+                    BluetoothAdapter.STATE_TURNING_ON -> {
+                        notification("State T On")
+                        gatt = null
+                        startScan()
+                    }
                     else -> {
                         notification("Undefine")
                     }
@@ -119,6 +120,7 @@ class BluetoothReceive(
                 when (action) {
                     BluetoothDevice.ACTION_ACL_CONNECTED -> {
                         notification("Connected")
+                        isNotScanCancel = false
                     }
                     BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                         notification("Disconnected")
@@ -132,7 +134,6 @@ class BluetoothReceive(
         }
     }
 
-    @SuppressWarnings("MissingPermission")
     private fun settingsBlue() {
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
         startActivityForResult(activity!!, enableBtIntent, 1, Bundle())
@@ -141,12 +142,18 @@ class BluetoothReceive(
     private var gatt: BluetoothGatt? = null
 
     private val mGattCallback: BluetoothGattCallback by lazy {
-        @SuppressWarnings("MissingPermission")
         object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    gatt.discoverServices()
-                        FuncAsyncData().autoWriteValue(context,gatt,baseUUID,charUUID)
+                    val context = context ?: return
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.BLUETOOTH_CONNECT
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        gatt.discoverServices()
+                        FuncAsyncData().autoWriteValue(context, gatt, baseUUID, charUUID)
+                    }
                 } else {
                     Log.w(tag, "onConnectionStateChange received: $status")
                 }
@@ -154,7 +161,6 @@ class BluetoothReceive(
 
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {}
 
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onCharacteristicRead(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic,
@@ -165,7 +171,6 @@ class BluetoothReceive(
                 }
             }
 
-            @RequiresApi(Build.VERSION_CODES.O)
             override fun onCharacteristicChanged(
                 gatt: BluetoothGatt,
                 characteristic: BluetoothGattCharacteristic
@@ -175,7 +180,6 @@ class BluetoothReceive(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
         if (UUID.fromString(charUUID) == characteristic.uuid) {
             val result = characteristic.value.map {
@@ -192,30 +196,66 @@ class BluetoothReceive(
         }
     }
 
-    @SuppressWarnings("MissingPermission")
     override fun writeCharacteristic(bytes: ByteArray) {
         val service = gatt?.getService(UUID.fromString(this.baseUUID)) ?: return
         service.characteristics?.forEach { Log.d(tag, "writeCharacteristic: ${it.uuid}") }
         val characteristic = service.getCharacteristic(UUID.fromString(charUUID)) ?: return
         characteristic.value = bytes
-        gatt?.setCharacteristicNotification(characteristic, true)
-        gatt?.writeCharacteristic(characteristic)
+        val context = context ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                gatt?.setCharacteristicNotification(characteristic, true)
+                gatt?.writeCharacteristic(characteristic)
+            }
+        } else {
+            gatt?.setCharacteristicNotification(characteristic, true)
+            gatt?.writeCharacteristic(characteristic)
+        }
+
     }
 
-    @SuppressWarnings("MissingPermission")
     override fun closeGatt() {
-        gatt?.disconnect()
-        gatt = null
+        if (context != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    gatt?.disconnect()
+                    gatt = null
+                }
+            } else {
+                gatt?.disconnect()
+                gatt = null
+            }
+        }
     }
 
-    @SuppressWarnings("MissingPermission")
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             super.onScanResult(callbackType, result)
-            notification("Scanning")
             val device = result?.device ?: return
-            Log.d(tag, "onScanResult: ${device.address} ${device.name}")
-            if (context != null) {
+            val context = context ?: return
+            Log.d(
+                tag,
+                "onScanResult: ${device.address} ${device.name} ${Build.VERSION.SDK_INT >= Build.VERSION_CODES.S}"
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    scanner?.stopScan(this)
+                    isNotScanCancel = false
+                    gatt = device.connectGatt(context, true, mGattCallback)
+                }
+            } else {
                 scanner?.stopScan(this)
                 isNotScanCancel = false
                 gatt = device.connectGatt(context, true, mGattCallback)
@@ -226,29 +266,43 @@ class BluetoothReceive(
             super.onScanFailed(errorCode)
             notification("Scan fail $errorCode")
         }
+
+        override fun onBatchScanResults(results: MutableList<ScanResult>?) {
+            super.onBatchScanResults(results)
+            Log.d(BluetoothReceive::class.simpleName, "onBatchScanResults: ")
+            if (results == null) return
+            for (result in results) {
+                Log.d(BluetoothReceive::class.simpleName, "onBatchScanResults: $result")
+            }
+        }
     }
 
-    @SuppressWarnings("MissingPermission")
     override fun startScan() {
-        if (context?.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
+        val ctx = context ?: return
+        if (ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED
         ) {
+            val adp = adapter ?: return
+            if (!adp.isEnabled) {
+                settingsBlue()
+                return
+            }
+            if(!FuncAsyncData().isLocationEnabled(ctx)){
+                FuncAsyncData().enableLocation(ctx)
+            }
+            scanner = adapter.bluetoothLeScanner
+            val arrFilter: List<ScanFilter> = this.serviceUuids
+                ?.map {
+                    ScanFilter.Builder().setServiceUuid(ParcelUuid(it)).build()
+                }?.toList() ?: ArrayList()
+            Log.d(BluetoothReceive::class.java.simpleName, "startScan: ${this.serviceUuids?.size}")
+            val scanSettings: ScanSettings =
+                ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+            scanner!!.startScan(arrFilter, scanSettings, scanCallback)
+            notification("Scanning")
+        } else {
             requestLocationPermission()
-            return
         }
-        if (adapter?.isEnabled == false) {
-            settingsBlue()
-            return
-        }
-        scanner = adapter?.bluetoothLeScanner
-        val arrFilter: List<ScanFilter> = this.serviceUuids
-            ?.map {
-                ScanFilter.Builder().setServiceUuid(ParcelUuid(it)).build()
-            }?.toList() ?: ArrayList()
-        val scanSettings: ScanSettings =
-            ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-        scanner?.startScan(arrFilter, scanSettings, scanCallback)
-        notification("Scanning")
     }
 
     override fun onRequestPermissionsResult(

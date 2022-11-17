@@ -1,6 +1,5 @@
 package com.hodoan.flutter_blue_background.db_helper
 
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -25,11 +24,10 @@ class DbBLueAsyncSettingsHelper(context: Context, factory: SQLiteDatabase.Cursor
         onCreate(db)
     }
 
-    @SuppressLint("Range")
     fun cursorToModel(cursor: Cursor): BlueAsync {
         return BlueAsync(
-            name = cursor.getString(cursor.getColumnIndex(NAME_COl)),
-            value = cursor.getString(cursor.getColumnIndex(VALUE_COL))
+            name = cursor.getString(cursor.getColumnIndexOrThrow(NAME_COl)),
+            value = cursor.getString(cursor.getColumnIndexOrThrow(VALUE_COL))
         )
     }
 
@@ -95,4 +93,4 @@ class DbBLueAsyncSettingsHelper(context: Context, factory: SQLiteDatabase.Cursor
     }
 }
 
-class BlueAsync(val name:String,val value:String)
+class BlueAsync(val name: String, val value: String)

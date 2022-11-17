@@ -104,20 +104,19 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         result.success(false)
     }
 
-    @SuppressLint("Range")
     private fun listTaskAsync(result: Result) {
         context?.let {
             val db = DbBLueAsyncSettingsHelper(it, null)
             val resultDb = db.args() ?: return
-            val check = resultDb.moveToFirst()
-            if (!check) return
-            val list = ArrayList<BlueAsync>()
-            list.add(db.cursorToModel(resultDb))
-            while (resultDb.moveToNext()) {
+            if (resultDb.moveToFirst()) {
+                val list = ArrayList<BlueAsync>()
                 list.add(db.cursorToModel(resultDb))
+                while (resultDb.moveToNext()) {
+                    list.add(db.cursorToModel(resultDb))
+                }
+                val gson = Gson()
+                result.success(gson.toJson(list))
             }
-            val gson = Gson()
-            result.success(gson.toJson(list))
             return
         }
         result.success(null)
@@ -159,7 +158,6 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         result.success(null)
     }
 
-    @SuppressWarnings("MissingPermission")
     private fun writeCharacteristic(arguments: Any?, result: Result) {
         val listInt: List<Byte> = arguments as List<Byte>
         val data = byteArrayOf(

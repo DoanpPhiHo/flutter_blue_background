@@ -6,11 +6,9 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 class DbBleValueHelper(context: Context, factory: SQLiteDatabase.CursorFactory?) :
     SQLiteOpenHelper(
@@ -29,20 +27,19 @@ class DbBleValueHelper(context: Context, factory: SQLiteDatabase.CursorFactory?)
         onCreate(db)
     }
 
-    @SuppressLint("Range")
     fun cursorToModel(cursor: Cursor): BleValue {
         return BleValue(
-            time = cursor.getString(cursor.getColumnIndex(TIME_COL)),
-            value = cursor.getString(cursor.getColumnIndex(VALUE_COL))
+            time = cursor.getString(cursor.getColumnIndexOrThrow(TIME_COL)),
+            value = cursor.getString(cursor.getColumnIndexOrThrow(VALUE_COL))
         )
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("SimpleDateFormat")
     fun add(value: String): Boolean {
         val values = ContentValues()
-        val formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
-        val current = LocalDateTime.now().format(formatter)
-        values.put(TIME_COL, current)
+        val sdf = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
+        val currentDate = sdf.format(Date())
+        values.put(TIME_COL, currentDate)
         values.put(VALUE_COL, value)
 
         val db = this.writableDatabase
@@ -72,7 +69,14 @@ class DbBleValueHelper(context: Context, factory: SQLiteDatabase.CursorFactory?)
 
     fun args(): Cursor? {
         val db = this.readableDatabase
-        return db?.rawQuery("SELECT * FROM $TABLE_NAME", null)
+        return try {
+            db?.rawQuery("SELECT * FROM $TABLE_NAME", null)
+        }catch (e:java.lang.Exception){
+            Log.d(DbBleValueHelper::class.java.simpleName, "args: error $e")
+            null
+        }finally {
+            db.close()
+        }
     }
 
     companion object {
