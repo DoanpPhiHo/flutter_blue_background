@@ -143,6 +143,7 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
             putString(charUUIDStr, charUUID)
         }?.apply()
         result.success(null)
+        return
     }
 
     private fun writeCharacteristic(arguments: Any?, result: Result) {
@@ -178,7 +179,7 @@ class FlutterBlueBackgroundPlugin : FlutterPlugin, MethodCallHandler, ActivityAw
         }
         bluetoothReceive?.startScan()
         result.success(true)
-
+        return
     }
 
     private fun getPlatformVersion(result: Result) {

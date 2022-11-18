@@ -44,6 +44,19 @@ samples, guidance on mobile development, and a full API reference.
 
 # init plugins
 
+# setting ios
+ - update info.plist
+  ```Info.plist
+  <key>NSBluetoothAlwaysUsageDescription</key>
+  <string>using blue</string>
+  <key>NSBluetoothPeripheralUsageDescription</key>
+  <string>using blue</string>
+  <key>UIApplicationSupportsIndirectInputEvents</key>
+  ```
+
+# setting android
+ - no need to do anything :)))
+
 ```dart
 ///init main app
 Future<void> futute() async {

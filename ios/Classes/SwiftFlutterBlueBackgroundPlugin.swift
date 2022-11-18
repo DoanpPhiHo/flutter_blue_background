@@ -87,6 +87,7 @@ public class SwiftFlutterBlueBackgroundPlugin: NSObject, FlutterPlugin {
             uuidService = data["uuidService"] as! [String]
         }
         result(nil)
+        return
     }
     
     private func getPlatformVersion(result:@escaping FlutterResult){
@@ -96,6 +97,7 @@ public class SwiftFlutterBlueBackgroundPlugin: NSObject, FlutterPlugin {
     private func startBackground(result:@escaping FlutterResult){
         self.manager = CBCentralManager(delegate: self, queue: .main)
         result(true)
+        return
     }
     
     public func applicationDidEnterBackground(_ application: UIApplication) {
