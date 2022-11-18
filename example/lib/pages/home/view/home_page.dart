@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_background/flutter_blue_background.dart';
 import 'package:flutter_blue_background/models/meter/gen_bgm_meter.dart';
-import 'package:flutter_blue_background_example/pages/utils/di.dart';
 
 import '../../async_settings/view/async_settings_page.dart';
 
@@ -113,7 +112,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => AsyncSettings.push(getIt()),
+                  builder: (context) => AsyncSettings.push(/*getIt()*/),
                 ),
               );
             },

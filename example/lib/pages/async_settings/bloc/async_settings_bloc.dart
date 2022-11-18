@@ -9,8 +9,9 @@ part 'async_settings_state.dart';
 
 class AsyncSettingsBloc extends Bloc<AsyncSettingsEvent, AsyncSettingsState> {
   // ignore: unused_field
-  final IAsyncSettings _asyncSettings;
-  AsyncSettingsBloc(this._asyncSettings) : super(AsyncSettingsState.init()) {
+  // final IAsyncSettings _asyncSettings;
+  AsyncSettingsBloc(/*this._asyncSettings*/)
+      : super(AsyncSettingsState.init()) {
     // _asyncSettings.listenToBlueAsyncSettings()?.listen((list) => add(
     //       AsyncUpdateSettingsEvent(list),
     //     ));

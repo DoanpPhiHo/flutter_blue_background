@@ -8,9 +8,10 @@ import 'package:flutter_blue_background_example/pages/async_settings/bloc/async_
 class AsyncSettings extends StatefulWidget {
   const AsyncSettings._({super.key});
 
-  static Widget push(IAsyncSettings asyncSettings, {Key? key}) => BlocProvider(
+  static Widget push(/*IAsyncSettings asyncSettings,*/ {Key? key}) =>
+      BlocProvider(
         create: (ctx) =>
-            AsyncSettingsBloc(asyncSettings)..add(AsyncInitSettingsEvent()),
+            AsyncSettingsBloc(/*asyncSettings*/)..add(AsyncInitSettingsEvent()),
         child: AsyncSettings._(
           key: key,
         ),

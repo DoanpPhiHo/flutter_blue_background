@@ -18,9 +18,11 @@ packages:
   blue_handle_data:
     dependency: transitive
     description:
-      path: "../packages/blue_handle_data"
-      relative: true
-    source: path
+      path: "packages/blue_handle_data"
+      ref: HEAD
+      resolved-ref: f00db1aa3c4679bf3c09f61655968936876b09c9
+      url: "https://github.com/DoanpPhiHo/flutter_blue_background"
+    source: git
     version: "0.0.1"
   boolean_selector:
     dependency: transitive

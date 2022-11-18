@@ -2,7 +2,7 @@ name: flutter_blue_background
 description: A new Flutter plugin project.
 version: 0.0.1
 homepage:
-publish_to: none
+publish_to: https://github.com/DoanpPhiHo/flutter_blue_background
 
 environment:
   sdk: '>=2.18.2 <3.0.0'
@@ -15,7 +15,9 @@ dependencies:
   meta: ^1.8.0
   plugin_platform_interface: ^2.0.2
   blue_handle_data:
-    path: packages/blue_handle_data
+    git:
+      url: https://github.com/DoanpPhiHo/flutter_blue_background
+      path: packages/blue_handle_data
   # blue_async:
   #   git: 
   #     url: https://github.com/DoanpPhiHo/blue_async
