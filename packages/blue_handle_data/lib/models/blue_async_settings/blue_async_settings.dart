@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 // import 'package:isar/isar.dart';
 
@@ -19,10 +21,7 @@ class BlueAsyncSettings {
   factory BlueAsyncSettings.fromJson(Map<String, dynamic> json) =>
       BlueAsyncSettings(
         nameTasks: json['name'],
-        value: Uint8List.fromList((json['value'] as String)
-            .split(',')
-            .map((e) => int.parse(e))
-            .toList()),
+        value: Uint8List.fromList((json['value'] as List).cast<int>()),
       );
 
   final int id; //Id id;
@@ -37,6 +36,7 @@ class BlueAsyncSettings {
   Map<String, dynamic> toJson() => {
         'id': id,
         'name_tasks': nameTasks,
-        'value': value,
+        if (Platform.isAndroid) 'value': value,
+        if (Platform.isIOS) 'value': value.toList()
       };
 }

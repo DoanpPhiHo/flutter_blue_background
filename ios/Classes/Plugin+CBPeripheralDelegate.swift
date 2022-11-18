@@ -55,6 +55,8 @@ extension SwiftFlutterBlueBackgroundPlugin : CBPeripheralDelegate{
         guard let charValue = characteristic.value else {return}
         let value = [UInt8](charValue)
         eventSink?(value)
+        self.tastCount -= 1
+        print("tastCount: \(tastCount)")
         if self.tastCount == 0{
             // kill ble
             let task:BlueModel? = db.readModelTurnOff()
@@ -70,7 +72,6 @@ extension SwiftFlutterBlueBackgroundPlugin : CBPeripheralDelegate{
             }
             self.tastCount = -1
         }
-        self.tastCount -= 1
         let _ = dbBle.add(taskValue: value.map({v in String(v)}).joined(separator: ","))
     }
 }
