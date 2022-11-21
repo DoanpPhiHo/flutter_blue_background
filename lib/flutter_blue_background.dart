@@ -50,4 +50,8 @@ class FlutterBlueBackground {
   Stream<dynamic> subscriptionData() {
     return FlutterBlueBackgroundPlatform.instance.subscriptionData();
   }
+
+  Stream<dynamic> listenDevice() {
+    return FlutterBlueBackgroundPlatform.instance.subscriptionData();
+  }
 }

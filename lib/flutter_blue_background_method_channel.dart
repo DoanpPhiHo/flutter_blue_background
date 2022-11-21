@@ -66,7 +66,16 @@ class MethodChannelFlutterBlueBackground extends FlutterBlueBackgroundPlatform {
 
   @override
   Stream<dynamic> subscriptionData() async* {
-    yield* eventChanel.receiveBroadcastStream();
+    yield* eventChanel
+        .receiveBroadcastStream()
+        .where((event) => (event as Map<String, dynamic>)['type'] == 1);
+  }
+
+  @override
+  Stream<dynamic> listenDevice() async* {
+    yield* eventChanel
+        .receiveBroadcastStream()
+        .where((event) => (event as Map<String, dynamic>)['type'] == 2);
   }
 
   @override

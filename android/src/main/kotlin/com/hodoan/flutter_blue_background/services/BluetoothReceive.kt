@@ -18,8 +18,10 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.core.app.NotificationCompat
+import com.google.gson.Gson
 import com.hodoan.flutter_blue_background.FlutterBlueBackgroundPlugin
 import com.hodoan.flutter_blue_background.R
+import com.hodoan.flutter_blue_background.ResultDataEvent
 import com.hodoan.flutter_blue_background.async_data.FuncAsyncData
 import com.hodoan.flutter_blue_background.db_helper.DbBLueAsyncSettingsHelper
 import com.hodoan.flutter_blue_background.interfaces.IActionBlueLe
@@ -40,6 +42,8 @@ class BluetoothReceive(
 ) :
     BroadcastReceiver(),
     IActionBlueLe, PluginRegistry.RequestPermissionsResultListener {
+    private val dataCharacteristic:Int = 1
+    private val dataDeviceBle:Int = 2
     private var scanner: BluetoothLeScanner? = null
     private val tag: String = "BluetoothReceive"
 
@@ -227,10 +231,12 @@ class BluetoothReceive(
             val result = characteristic.value.map {
                 java.lang.Byte.toUnsignedInt(it).toString(radix = 10).padStart(2, '0').toInt()
             }
+            val gson = Gson()
+            val resultEvent = ResultDataEvent(dataCharacteristic,result)
             activity?.runOnUiThread {
-                sink?.success(result)
+                sink?.success(gson.toJson(resultEvent))
             }
-            FuncAsyncData().savaDataDB(context, characteristic.value)
+//            FuncAsyncData().savaDataDB(context, characteristic.value)
             taskCount -= 1
             if (taskCount == 0) {
                 FuncAsyncData().turnOffBle(context, gatt, baseUUID, charUUID)
@@ -282,6 +288,7 @@ class BluetoothReceive(
     private val scanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
             super.onScanResult(callbackType, result)
+            sendDeviceBle(result)
             val device = result?.device ?: return
             val context = context ?: return
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -313,6 +320,14 @@ class BluetoothReceive(
             for (result in results) {
                 Log.d(BluetoothReceive::class.simpleName, "onBatchScanResults: $result")
             }
+        }
+    }
+
+    private fun sendDeviceBle(result: ScanResult?) {
+        val resultEvent = result?.let { ResultDataEvent(dataDeviceBle, it) }
+        val gson = Gson()
+        activity?.runOnUiThread {
+            sink?.success(gson.toJson(resultEvent))
         }
     }
 

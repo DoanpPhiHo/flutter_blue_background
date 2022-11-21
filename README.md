@@ -52,6 +52,10 @@ samples, guidance on mobile development, and a full API reference.
   <key>NSBluetoothPeripheralUsageDescription</key>
   <string>using blue</string>
   <key>UIApplicationSupportsIndirectInputEvents</key>
+  <key>UIBackgroundModes</key>
+  <array>
+		<string>bluetooth-central</string>
+	</array>
   ```
 
 # setting android

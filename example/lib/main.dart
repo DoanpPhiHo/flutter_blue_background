@@ -6,7 +6,7 @@ import 'package:flutter_blue_background_example/pages/home/view/home_page.dart';
 import 'pages/utils/di.dart';
 
 Future<void> futute() async {
-  Future.wait([
+  await Future.wait([
     FlutterBlueBackground.instance.initial(BlueBgModel()),
     diInit(),
   ]);

@@ -54,6 +54,11 @@ class MockFlutterBlueBackgroundPlatform
   Future<List<BleValueDb>> listBleData() {
     throw UnimplementedError();
   }
+
+  @override
+  Stream listenDevice() {
+    throw UnimplementedError();
+  }
 }
 
 void main() {

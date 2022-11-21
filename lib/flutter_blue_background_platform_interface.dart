@@ -39,6 +39,10 @@ abstract class FlutterBlueBackgroundPlatform extends PlatformInterface {
     throw UnimplementedError('subscriptionData() has not been implemented.');
   }
 
+  Stream<dynamic> listenDevice() {
+    throw UnimplementedError('subscriptionData() has not been implemented.');
+  }
+
   Future<bool> writeCharacteristic(List<int> list) {
     throw UnimplementedError('writeCharacteristic() has not been implemented.');
   }
